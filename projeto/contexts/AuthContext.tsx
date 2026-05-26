@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[AuthContext] User Email:', data.user.email);
       console.log('[AuthContext] Now loading profile...');
       setUser(data.user);
-      setSession(data);
+      setSession(data.session);
       
       // P0: Wait for profile with 5s timeout (increased from 2s)
       const profileResult = await Promise.race([
@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('[AuthContext] Sign up successful, loading profile...');
       setUser(data.user);
-      setSession(data);
+      setSession(data.session);
       
       // P0: Wait for profile with 5s timeout
       const profileResult = await Promise.race([
