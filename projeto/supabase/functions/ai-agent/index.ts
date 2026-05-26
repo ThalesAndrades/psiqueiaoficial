@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { createLogger } from '../_shared/logger.ts';
+
+const log = createLogger('ai-agent');
 
 interface AIRequest {
   type: 'chat' | 'insight' | 'analysis' | 'recommendation' | 'mood_analysis' | 'treatment_suggestion';
@@ -31,7 +34,7 @@ serve(async (req) => {
     // Verify user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      log.error('Authentication error', { error: authError?.message ?? String(authError) });
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -43,14 +46,14 @@ serve(async (req) => {
     // user_id is always derived from the auth token — never trust the body.
     const userId = user.id;
 
-    console.log(`AI Agent request - Type: ${type}, User: ${user.id}`);
+    log.info('AI Agent request', { type, userId: user.id });
 
     // Get OnSpace AI credentials
     const aiApiKey = Deno.env.get('ONSPACE_AI_API_KEY');
     const aiBaseUrl = Deno.env.get('ONSPACE_AI_BASE_URL');
 
     if (!aiApiKey || !aiBaseUrl) {
-      console.error('OnSpace AI credentials missing');
+      log.error('OnSpace AI credentials missing');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -61,7 +64,7 @@ serve(async (req) => {
     const systemPrompt = buildSystemPrompt(type, context);
     const userPrompt = message || buildUserPrompt(type, context);
 
-    console.log('Calling OnSpace AI...');
+    log.info('Calling OnSpace AI');
 
     // Call OnSpace AI
     const aiResponse = await fetch(`${aiBaseUrl}/chat/completions`, {
@@ -84,7 +87,7 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('OnSpace AI error:', errorText);
+      log.error('OnSpace AI error', { error: errorText });
       return new Response(
         JSON.stringify({ error: `AI service error: ${errorText}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -118,7 +121,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('AI Agent response generated successfully');
+    log.info('AI Agent response generated successfully');
 
     return new Response(
       JSON.stringify({ 
@@ -132,7 +135,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('AI Agent error:', error);
+    log.error('AI Agent error', { error: error?.message ?? String(error) });
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

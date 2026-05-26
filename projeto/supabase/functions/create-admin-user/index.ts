@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { createLogger } from '../_shared/logger.ts';
+
+const log = createLogger('create-admin-user');
 
 interface CreateUserRequest {
   email: string;
@@ -64,7 +67,7 @@ serve(async (req) => {
     });
 
     if (invitationError || !invitation?.valid) {
-      console.warn('[create-admin-user] Invitation rejected', { email, userType, reason: invitation?.error || invitationError?.message });
+      log.warn('Invitation rejected', { email, userType, reason: invitation?.error || invitationError?.message });
       return new Response(
         JSON.stringify({ error: invitation?.error || 'Convite inválido ou expirado' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -92,7 +95,7 @@ serve(async (req) => {
     });
 
     if (createError) {
-      console.error('Error creating user:', createError);
+      log.error('Failed to create user', { error: createError.message, code: (createError as any)?.code });
       return new Response(
         JSON.stringify({ error: createError.message }),
         { 
@@ -127,7 +130,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Edge Function error:', error);
+    log.error('Unhandled error', { error: error?.message ?? String(error) });
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

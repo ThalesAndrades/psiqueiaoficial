@@ -1,7 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { createLogger } from '../_shared/logger.ts';
 import Stripe from 'https://esm.sh/stripe@14.5.0?target=deno';
+
+const log = createLogger('stripe-payment');
 
 interface PaymentRequest {
   appointmentId: string;
@@ -66,7 +69,7 @@ serve(async (req) => {
     }
     const action = queryAction || bodyPayload.action;
 
-    console.log(`[Stripe] Action: ${action}`);
+    log.info('[Stripe] Action', { action });
 
     // CREATE PAYMENT INTENT WITH CONNECT (default method)
     if (action === 'create-payment-intent') {
@@ -110,7 +113,7 @@ serve(async (req) => {
         .single();
 
       if (apptErr || !appointment) {
-        console.error('[Stripe] Appointment lookup failed:', apptErr);
+        log.error('[Stripe] Appointment lookup failed', { error: apptErr?.message ?? String(apptErr) });
         return new Response(
           JSON.stringify({ error: 'Appointment not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -118,7 +121,7 @@ serve(async (req) => {
       }
 
       if (user.id !== appointment.patient_id) {
-        console.error(`[Stripe] Ownership validation failed: user ${user.id} tried to pay for appointment owned by ${appointment.patient_id}`);
+        log.error('[Stripe] Ownership validation failed', { userId: user.id, appointmentOwnerId: appointment.patient_id });
         return new Response(
           JSON.stringify({ error: 'Unauthorized - You can only create payments for your own appointments' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -144,7 +147,7 @@ serve(async (req) => {
       const patientId = appointment.patient_id;
       const platformFeePercent = Number(Deno.env.get('PLATFORM_FEE_PERCENT') ?? '10');
 
-      console.log(`[Stripe] Creating payment intent: ${amount} ${currency} for appointment ${appointmentId}`);
+      log.info('[Stripe] Creating payment intent', { amount, currency, appointmentId });
 
       // Verify psychologist has completed Stripe onboarding
       const { data: psychProfile } = await supabaseAdmin
@@ -154,7 +157,7 @@ serve(async (req) => {
         .single();
 
       if (!psychProfile?.stripe_account_id || !psychProfile?.stripe_onboarding_completed) {
-        console.error('[Stripe] Psychologist onboarding not completed');
+        log.error('[Stripe] Psychologist onboarding not completed');
         return new Response(
           JSON.stringify({ error: 'Psychologist has not completed payment setup. Please complete onboarding first.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -182,7 +185,7 @@ serve(async (req) => {
           },
         });
 
-        console.log(`[Stripe] Payment intent created: ${paymentIntent.id}`);
+        log.info('[Stripe] Payment intent created', { paymentIntentId: paymentIntent.id });
 
         // Store transaction in database
         const { error: dbError } = await supabaseAdmin.from('financial_transactions').insert({
@@ -198,7 +201,7 @@ serve(async (req) => {
         });
 
         if (dbError) {
-          console.error('[Stripe] Error storing transaction:', dbError);
+          log.error('[Stripe] Error storing transaction', { error: dbError?.message ?? String(dbError) });
         }
 
         return new Response(
@@ -209,7 +212,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (stripeError: any) {
-        console.error('[Stripe] Payment intent error:', stripeError);
+        log.error('[Stripe] Payment intent error', { error: stripeError?.message ?? String(stripeError) });
         return new Response(
           JSON.stringify({ 
             error: `Stripe error: ${stripeError.message}`,
@@ -261,7 +264,7 @@ serve(async (req) => {
       }
 
       if (user.id !== appointment.patient_id) {
-        console.error(`[Stripe] Checkout ownership validation failed: user ${user.id} tried to pay for appointment owned by ${appointment.patient_id}`);
+        log.error('[Stripe] Checkout ownership validation failed', { userId: user.id, appointmentOwnerId: appointment.patient_id });
         return new Response(
           JSON.stringify({ error: 'Unauthorized - You can only create checkout sessions for your own appointments' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -339,7 +342,7 @@ serve(async (req) => {
       });
 
       if (dbError) {
-        console.error('[Stripe] Error storing transaction:', dbError);
+        log.error('[Stripe] Error storing transaction', { error: dbError?.message ?? String(dbError) });
       }
 
       return new Response(
@@ -361,7 +364,7 @@ serve(async (req) => {
       try {
         const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
         if (!webhookSecret) {
-          console.error('[Webhook] STRIPE_WEBHOOK_SECRET not configured');
+          log.error('[Webhook] STRIPE_WEBHOOK_SECRET not configured');
           return new Response('Webhook secret not configured', { status: 500 });
         }
 
@@ -371,9 +374,9 @@ serve(async (req) => {
           webhookSecret
         );
 
-        console.log(`[Webhook] Received event: ${event.type}`);
+        log.info('[Webhook] Received event', { type: event.type });
       } catch (err: any) {
-        console.error('[Webhook] Signature verification failed:', {
+        log.error('[Webhook] Signature verification failed', {
           message: err.message,
           type: err.type,
           raw: body.substring(0, 100),
@@ -384,7 +387,7 @@ serve(async (req) => {
       // Handle payment_intent.succeeded
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log(`[Webhook] Payment succeeded: ${paymentIntent.id}`);
+        log.info('[Webhook] Payment succeeded', { paymentIntentId: paymentIntent.id });
         
         // Update transaction status
         const { error } = await supabaseAdmin
@@ -393,7 +396,7 @@ serve(async (req) => {
           .eq('stripe_payment_id', paymentIntent.id);
 
         if (error) {
-          console.error('[Webhook] Error updating transaction:', error);
+          log.error('[Webhook] Error updating transaction', { error: error?.message ?? String(error) });
         }
 
         // Update appointment payment status
@@ -408,7 +411,7 @@ serve(async (req) => {
       // Handle checkout.session.completed
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log(`[Webhook] Checkout completed: ${session.id}`);
+        log.info('[Webhook] Checkout completed', { sessionId: session.id });
         
         // Update transaction status
         const { error } = await supabaseAdmin
@@ -417,7 +420,7 @@ serve(async (req) => {
           .eq('stripe_payment_id', session.id);
 
         if (error) {
-          console.error('[Webhook] Error updating transaction:', error);
+          log.error('[Webhook] Error updating transaction', { error: error?.message ?? String(error) });
         }
 
         // Update appointment payment status and create Meet link
@@ -450,9 +453,9 @@ serve(async (req) => {
             .eq('id', session.metadata.appointment_id);
 
           if (updateError) {
-            console.error('[Webhook] Error updating appointment:', updateError);
+            log.error('[Webhook] Error updating appointment', { error: updateError?.message ?? String(updateError) });
           } else {
-            console.log(`[Webhook] Appointment ${session.metadata.appointment_id} confirmed with Meet link: ${meetLink}`);
+            log.info('[Webhook] Appointment confirmed with Meet link', { appointmentId: session.metadata.appointment_id, meetLink });
           }
         }
       }
@@ -460,7 +463,7 @@ serve(async (req) => {
       // Handle account.updated (Connect account status changes)
       if (event.type === 'account.updated') {
         const account = event.data.object as Stripe.Account;
-        console.log(`[Webhook] Account updated: ${account.id}`);
+        log.info('[Webhook] Account updated', { accountId: account.id });
         
         // Update psychologist profile with account status
         const onboardingCompleted = account.charges_enabled && account.payouts_enabled;
@@ -473,7 +476,7 @@ serve(async (req) => {
       // Handle payment_intent.payment_failed
       if (event.type === 'payment_intent.payment_failed') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log(`[Webhook] Payment failed: ${paymentIntent.id}`);
+        log.info('[Webhook] Payment failed', { paymentIntentId: paymentIntent.id });
         
         await supabaseAdmin
           .from('financial_transactions')
@@ -561,7 +564,7 @@ serve(async (req) => {
         type: 'account_onboarding',
       });
 
-      console.log(`[Stripe] Created Connect account ${account.id} for user ${user.id}`);
+      log.info('[Stripe] Created Connect account', { accountId: account.id, userId: user.id });
 
       return new Response(
         JSON.stringify({ url: accountLink.url, accountId: account.id }),
@@ -722,7 +725,7 @@ serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('[Stripe] Unexpected error:', error);
+    log.error('[Stripe] Unexpected error', { error: error?.message ?? String(error) });
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

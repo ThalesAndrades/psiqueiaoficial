@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { createLogger } from '../_shared/logger.ts';
+
+const log = createLogger('push-notifications');
 
 interface PushNotificationRequest {
   userId: string;
@@ -49,14 +52,14 @@ serve(async (req) => {
       const { data: { user } } = await supabase.auth.getUser(token);
 
       if (!user) {
-        console.warn('[Push] Unauthorized send request attempted');
+        log.warn('[Push] Unauthorized send request attempted');
         return new Response(
           JSON.stringify({ error: 'Unauthorized - Authentication required' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log(`[Push] Send request from user: ${user.id}`);
+      log.info('[Push] Send request from user', { userId: user.id });
 
       const { userId, title, body, data, sound = 'default', priority = 'high' } = payload as PushNotificationRequest;
 
@@ -79,7 +82,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (!rel) {
-          console.warn(`[Push] User ${user.id} tried to push to unrelated user ${userId}`);
+          log.warn('[Push] User tried to push to unrelated user', { callerUserId: user.id, targetUserId: userId });
           return new Response(
             JSON.stringify({ error: 'You are not authorized to send notifications to this user' }),
             { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -147,7 +150,7 @@ serve(async (req) => {
       const { data: { user } } = await supabase.auth.getUser(token);
 
       if (!user) {
-        console.warn('[Push] Unauthorized bulk send request attempted');
+        log.warn('[Push] Unauthorized bulk send request attempted');
         return new Response(
           JSON.stringify({ error: 'Unauthorized - Authentication required' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -162,14 +165,14 @@ serve(async (req) => {
         .single();
 
       if (profile?.user_type !== 'psychologist') {
-        console.warn(`[Push] Non-psychologist ${user.id} attempted bulk send`);
+        log.warn('[Push] Non-psychologist attempted bulk send', { userId: user.id });
         return new Response(
           JSON.stringify({ error: 'Only psychologists can send bulk notifications' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log(`[Push] Bulk send request from psychologist: ${user.id}`);
+      log.info('[Push] Bulk send request from psychologist', { userId: user.id });
 
       const { userIds, title, body, data } = payload as BulkNotificationRequest;
 
@@ -287,7 +290,7 @@ serve(async (req) => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error storing push token:', error);
+        log.error('Error storing push token', { error: error?.message ?? String(error) });
         return new Response(
           JSON.stringify({ error: 'Failed to store push token' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -302,7 +305,7 @@ serve(async (req) => {
 
     return new Response('Invalid action', { status: 400 });
   } catch (error: any) {
-    console.error('Push notification error:', error);
+    log.error('Push notification error', { error: error?.message ?? String(error) });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
