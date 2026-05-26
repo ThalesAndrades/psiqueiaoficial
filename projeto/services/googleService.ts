@@ -214,7 +214,10 @@ export const googleService = {
       // Tentar criar via Edge Function
       const { data, error } = await supabase.functions.invoke('google-integration', {
         body: {
-          action: 'create_meet_link',
+          // The Edge Function dispatches on `create_meeting`; the legacy
+          // 'create_meet_link' name went to the "Unknown action" branch and
+          // 500'd silently before falling back to the placeholder below.
+          action: 'create_meeting',
           data: {
             scheduledAt,
             durationMinutes,

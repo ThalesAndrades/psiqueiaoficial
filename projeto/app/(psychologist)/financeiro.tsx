@@ -11,64 +11,6 @@ import { LoadingSpinner } from '../../components';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { toastManager } from '../../components/ui/Toast';
 
-const monthlyData = {
-  totalReceived: 18500,
-  totalPending: 3200,
-  totalSessions: 42,
-  averagePerSession: 450,
-};
-
-const transactions = [
-  {
-    id: '1',
-    patient: 'Ana Carolina',
-    date: '18 Jun',
-    amount: 450,
-    status: 'paid',
-    method: 'Pix',
-  },
-  {
-    id: '2',
-    patient: 'Pedro Santos',
-    date: '17 Jun',
-    amount: 450,
-    status: 'paid',
-    method: 'Cartão',
-  },
-  {
-    id: '3',
-    patient: 'Maria Silva',
-    date: '16 Jun',
-    amount: 450,
-    status: 'pending',
-    method: 'Pix',
-  },
-  {
-    id: '4',
-    patient: 'João Oliveira',
-    date: '15 Jun',
-    amount: 450,
-    status: 'paid',
-    method: 'Transferência',
-  },
-  {
-    id: '5',
-    patient: 'Carla Mendes',
-    date: '14 Jun',
-    amount: 450,
-    status: 'pending',
-    method: 'Pix',
-  },
-  {
-    id: '6',
-    patient: 'Roberto Lima',
-    date: '13 Jun',
-    amount: 450,
-    status: 'paid',
-    method: 'Cartão',
-  },
-];
-
 export default function FinanceiroScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -79,6 +21,18 @@ export default function FinanceiroScreen() {
   const [connectStatus, setConnectStatus] = useState<any>(null);
   const [isLoadingConnect, setIsLoadingConnect] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+
+  // Derived metrics — counted from the same transactions list rendered below,
+  // so the headline cards never disagree with the row count.
+  const completedSessionsCount = transactions.filter(
+    (t) => t.status === 'completed' && t.transaction_type === 'session_payment',
+  ).length;
+  const completedTotal = transactions
+    .filter((t) => t.status === 'completed' && t.transaction_type === 'session_payment')
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  const averagePerSession = completedSessionsCount > 0
+    ? completedTotal / completedSessionsCount
+    : 0;
 
   useEffect(() => {
     // Track screen view
@@ -323,11 +277,11 @@ export default function FinanceiroScreen() {
                 </View>
               </View>
               <Text style={styles.mainCardAmount}>
-                {formatCurrency(monthlyData.totalReceived)}
+                {formatCurrency(financialStats?.totalRevenue ?? 0)}
               </Text>
               <View style={styles.mainCardFooter}>
                 <Text style={styles.mainCardFooterText}>
-                  {monthlyData.totalSessions} sessões realizadas
+                  {completedSessionsCount} sessões realizadas
                 </Text>
               </View>
             </LinearGradient>
@@ -339,7 +293,7 @@ export default function FinanceiroScreen() {
                 </View>
                 <Text style={styles.smallCardLabel}>A Receber</Text>
                 <Text style={styles.smallCardAmount}>
-                  {formatCurrency(monthlyData.totalPending)}
+                  {formatCurrency(financialStats?.pendingRevenue ?? 0)}
                 </Text>
               </View>
 
@@ -349,7 +303,7 @@ export default function FinanceiroScreen() {
                 </View>
                 <Text style={styles.smallCardLabel}>Média/Sessão</Text>
                 <Text style={styles.smallCardAmount}>
-                  {formatCurrency(monthlyData.averagePerSession)}
+                  {formatCurrency(averagePerSession)}
                 </Text>
               </View>
             </View>
@@ -359,35 +313,46 @@ export default function FinanceiroScreen() {
           <View style={styles.transactionsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Transações Recentes</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAllText}>Ver Todas</Text>
+              <TouchableOpacity onPress={refreshFinancials}>
+                <Text style={styles.seeAllText}>Atualizar</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.transactionsList}>
-              {transactions.map((transaction: any) => (
+            {transactions.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="document-text-outline" size={32} color={theme.colors.muted} />
+                <Text style={styles.emptyStateText}>Nenhuma transação ainda.</Text>
+              </View>
+            ) : (
+              <View style={styles.transactionsList}>
+              {transactions.map((transaction) => {
+                const isPaid = transaction.status === 'completed';
+                const patientName = transaction.patient?.full_name ?? 'Paciente';
+                const dateLabel = new Date(transaction.transaction_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                const methodLabel = transaction.transaction_type === 'session_payment' ? 'Sessão' : transaction.transaction_type;
+                return (
                 <View key={transaction.id} style={styles.transactionCard}>
                   <View style={styles.transactionLeft}>
                     <View
                       style={[
                         styles.transactionIcon,
-                        transaction.status === 'paid'
+                        isPaid
                           ? styles.transactionIconPaid
                           : styles.transactionIconPending,
                       ]}
                     >
                       <Ionicons
-                        name={transaction.status === 'paid' ? 'checkmark' : 'time'}
+                        name={isPaid ? 'checkmark' : 'time'}
                         size={18}
-                        color={transaction.status === 'paid' ? '#10B981' : '#F59E0B'}
+                        color={isPaid ? '#10B981' : '#F59E0B'}
                       />
                     </View>
                     <View>
-                      <Text style={styles.transactionPatient}>{transaction.patient}</Text>
+                      <Text style={styles.transactionPatient}>{patientName}</Text>
                       <View style={styles.transactionDetails}>
-                        <Text style={styles.transactionDate}>{transaction.date}</Text>
+                        <Text style={styles.transactionDate}>{dateLabel}</Text>
                         <Text style={styles.transactionDot}>•</Text>
-                        <Text style={styles.transactionMethod}>{transaction.method}</Text>
+                        <Text style={styles.transactionMethod}>{methodLabel}</Text>
                       </View>
                     </View>
                   </View>
@@ -396,15 +361,15 @@ export default function FinanceiroScreen() {
                     <Text
                       style={[
                         styles.transactionAmount,
-                        transaction.status === 'pending' && styles.transactionAmountPending,
+                        !isPaid && styles.transactionAmountPending,
                       ]}
                     >
-                      {formatCurrency(transaction.amount)}
+                      {formatCurrency(Number(transaction.amount) || 0)}
                     </Text>
                     <View
                       style={[
                         styles.transactionBadge,
-                        transaction.status === 'paid'
+                        isPaid
                           ? styles.transactionBadgePaid
                           : styles.transactionBadgePending,
                       ]}
@@ -412,18 +377,20 @@ export default function FinanceiroScreen() {
                       <Text
                         style={[
                           styles.transactionBadgeText,
-                          transaction.status === 'paid'
+                          isPaid
                             ? styles.transactionBadgeTextPaid
                             : styles.transactionBadgeTextPending,
                         ]}
                       >
-                        {transaction.status === 'paid' ? 'Pago' : 'Pendente'}
+                        {isPaid ? 'Pago' : 'Pendente'}
                       </Text>
                     </View>
                   </View>
                 </View>
-              ))}
+                );
+              })}
             </View>
+            )}
           </View>
         </ScrollView>
       </LinearGradient>
@@ -609,6 +576,15 @@ const styles = StyleSheet.create({
   },
   transactionsList: {
     gap: 12,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: theme.colors.muted,
   },
   transactionCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
