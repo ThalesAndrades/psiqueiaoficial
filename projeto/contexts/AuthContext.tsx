@@ -18,7 +18,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, userType: 'patient' | 'psychologist', fullName: string, invitationCode: string, phone?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  deleteAccount: () => Promise<{ error: string | null }>;
+  deleteAccount: (password: string) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
 }
@@ -271,8 +271,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserProfile(null);
   };
 
-  const deleteAccount = async () => {
-    const { error } = await authService.deleteAccount();
+  const deleteAccount = async (password: string) => {
+    const { error } = await authService.deleteAccount(password);
     if (!error) {
       setUser(null);
       setSession(null);

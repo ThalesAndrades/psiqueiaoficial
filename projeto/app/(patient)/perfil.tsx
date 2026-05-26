@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
@@ -11,6 +11,7 @@ export default function PerfilScreen() {
   const { signOut, deleteAccount, userProfile } = useAuth();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleLogout = async () => {
     await signOut();
@@ -18,29 +19,19 @@ export default function PerfilScreen() {
   };
 
   const handleDeleteAccount = () => {
-    if (Platform.OS === 'web') {
-      setDeleteModalVisible(true);
-    } else {
-      Alert.alert(
-        'Excluir Conta',
-        'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão permanentemente removidos.',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          { 
-            text: 'Excluir', 
-            style: 'destructive',
-            onPress: confirmDeleteAccount
-          },
-        ]
-      );
-    }
+    setDeletePassword('');
+    setDeleteModalVisible(true);
   };
 
   const confirmDeleteAccount = async () => {
+    if (!deletePassword) {
+      const msg = 'Digite sua senha para confirmar';
+      if (Platform.OS === 'web') alert(msg); else Alert.alert('Senha obrigatória', msg);
+      return;
+    }
     setDeleting(true);
-    const { error } = await deleteAccount();
+    const { error } = await deleteAccount(deletePassword);
     setDeleting(false);
-    setDeleteModalVisible(false);
 
     if (error) {
       if (Platform.OS === 'web') {
@@ -48,9 +39,11 @@ export default function PerfilScreen() {
       } else {
         Alert.alert('Erro', `Não foi possível excluir sua conta: ${error}`);
       }
-    } else {
-      router.replace('/login');
+      return;
     }
+    setDeleteModalVisible(false);
+    setDeletePassword('');
+    router.replace('/login');
   };
 
   return (
@@ -113,42 +106,50 @@ export default function PerfilScreen() {
         </View>
       </View>
 
-      {/* Web Modal for Delete Confirmation */}
-      {Platform.OS === 'web' && (
-        <Modal
-          visible={deleteModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setDeleteModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Excluir Conta</Text>
-              <Text style={styles.modalMessage}>
-                Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão permanentemente removidos.
-              </Text>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setDeleteModalVisible(false)}
-                  disabled={deleting}
-                >
-                  <Text style={styles.cancelButtonText}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.deleteButton]}
-                  onPress={confirmDeleteAccount}
-                  disabled={deleting}
-                >
-                  <Text style={styles.deleteButtonText}>
-                    {deleting ? 'Excluindo...' : 'Excluir'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Excluir Conta</Text>
+            <Text style={styles.modalMessage}>
+              Esta ação é permanente. Digite sua senha para confirmar.
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Senha atual"
+              placeholderTextColor="#94A3B8"
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!deleting}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => { setDeleteModalVisible(false); setDeletePassword(''); }}
+                disabled={deleting}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteButton]}
+                onPress={confirmDeleteAccount}
+                disabled={deleting}
+              >
+                <Text style={styles.deleteButtonText}>
+                  {deleting ? 'Excluindo...' : 'Excluir'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -247,7 +248,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: theme.colors.muted,
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: theme.colors.foreground,
+    marginBottom: 16,
   },
   modalButtons: {
     flexDirection: 'row',

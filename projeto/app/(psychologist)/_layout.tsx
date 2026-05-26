@@ -22,34 +22,22 @@ export default function PsychologistLayout() {
     }
   }
 
+  const wrongUserType = !!userProfile && userProfile.user_type !== 'psychologist';
+
+  // Effect-based navigation — avoid router.replace() during render to prevent
+  // ping-pong between layouts during transient profile updates.
   useEffect(() => {
-    if (loading) return;
+    if (wrongUserType) {
+      router.replace('/(patient)');
+    }
+  }, [wrongUserType, router]);
 
-    // Only check user, not userProfile (profile loads in background)
-    // userProfile check happens in render below
-  }, [loading]);
-
-  if (loading) {
+  if (loading || !userProfile || wrongUserType) {
     return (
       <View style={styles.loadingContainer}>
         <LoadingSpinner size={40} color={theme.colors.primary} />
       </View>
     );
-  }
-
-  // If profile not loaded yet, show loading (will load in background)
-  if (!userProfile) {
-    return (
-      <View style={styles.loadingContainer}>
-        <LoadingSpinner size={40} color={theme.colors.primary} />
-      </View>
-    );
-  }
-
-  // Wrong user type - redirect to correct dashboard
-  if (userProfile.user_type !== 'psychologist') {
-    router.replace('/(patient)');
-    return null;
   }
 
   return (

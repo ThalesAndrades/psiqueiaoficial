@@ -1,8 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { corsHeaders } from '../_shared/cors.ts';
+import { buildCorsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -33,6 +34,34 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Usuário não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Require fresh password confirmation. A stolen short-lived JWT must not
+    // be enough to permanently destroy an account.
+    let confirmPassword = '';
+    try {
+      const body = await req.json();
+      confirmPassword = body?.password ?? '';
+    } catch {
+      confirmPassword = '';
+    }
+
+    if (!confirmPassword || !user.email) {
+      return new Response(
+        JSON.stringify({ error: 'Confirme sua senha para excluir a conta' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { error: reauthError } = await supabaseClient.auth.signInWithPassword({
+      email: user.email,
+      password: confirmPassword,
+    });
+    if (reauthError) {
+      return new Response(
+        JSON.stringify({ error: 'Senha incorreta' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
