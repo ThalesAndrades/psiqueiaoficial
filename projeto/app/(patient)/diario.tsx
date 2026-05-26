@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,6 +9,7 @@ import { aiService, diaryService, analyticsService } from '../../services';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppData } from '../../hooks/useAppData';
 import { LoadingSpinner, FadeInView } from '../../components';
+import { toastManager } from '../../components/ui/Toast';
 
 const moods = [
   { id: 'muito_bem', label: 'Muito Bem', icon: 'happy', color: '#10B981' },
@@ -54,12 +55,12 @@ export default function DiarioScreen() {
 
   const handleSaveDiary = async () => {
     if (!selectedMood && selectedEmotions.length === 0 && !diaryText.trim()) {
-      Alert.alert('Atenção', 'Adicione pelo menos uma informação antes de salvar');
+      toastManager.show({ type: 'info', message: 'Adicione pelo menos uma informação antes de salvar' });
       return;
     }
 
     if (!userProfile?.id) {
-      Alert.alert('Erro', 'Usuário não autenticado');
+      toastManager.show({ type: 'error', message: 'Usuário não autenticado' });
       return;
     }
     
@@ -72,15 +73,15 @@ export default function DiarioScreen() {
     });
 
     if (error) {
-      Alert.alert('Erro', 'Não foi possível salvar o diário');
+      toastManager.show({ type: 'error', message: 'Não foi possível salvar o diário' });
       setLoading(false);
       return;
     }
 
     // Track analytics
     await analyticsService.trackDiaryEntry(userProfile.id, selectedMood || undefined);
-    
-    Alert.alert('Sucesso', 'Diário salvo com sucesso!');
+
+    toastManager.show({ type: 'success', message: 'Diário salvo com sucesso!' });
     
     // Reset form
     setSelectedMood(null);
@@ -92,7 +93,7 @@ export default function DiarioScreen() {
 
   const handleAIAnalysis = async () => {
     if (!selectedMood && selectedEmotions.length === 0 && !diaryText.trim()) {
-      Alert.alert('Atenção', 'Adicione informações para analisar');
+      toastManager.show({ type: 'info', message: 'Adicione informações para analisar' });
       return;
     }
 
@@ -107,7 +108,7 @@ export default function DiarioScreen() {
     setLoadingAnalysis(false);
 
     if (error) {
-      Alert.alert('Erro', 'Não foi possível gerar análise');
+      toastManager.show({ type: 'error', message: 'Não foi possível gerar análise' });
       return;
     }
 

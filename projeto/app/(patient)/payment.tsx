@@ -48,7 +48,7 @@ export default function PaymentScreen() {
 
   const handlePayWithCheckout = async () => {
     if (!userProfile?.id || !appointmentId || !psychologistId) {
-      Alert.alert('Erro', 'Informações de pagamento incompletas.');
+      toastManager.show({ type: 'error', message: 'Informações de pagamento incompletas.' });
       return;
     }
 
@@ -105,7 +105,7 @@ export default function PaymentScreen() {
 
   const handlePayWithPaymentIntent = async () => {
     if (!userProfile?.id || !appointmentId || !psychologistId) {
-      Alert.alert('Erro', 'Informações de pagamento incompletas.');
+      toastManager.show({ type: 'error', message: 'Informações de pagamento incompletas.' });
       return;
     }
 

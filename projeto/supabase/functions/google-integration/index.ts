@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { createLogger } from '../_shared/logger.ts';
+
+const log = createLogger('google-integration');
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY');
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
@@ -39,7 +42,7 @@ serve(async (req) => {
 
     const { action, data, code } = await req.json() as GoogleIntegrationRequest;
 
-    console.log(`[Google Integration] Action: ${action}, User: ${user.id}`);
+    log.info('[Google Integration] Action', { action, userId: user.id });
 
     // Handle OAuth code exchange
     if (action === 'exchange_oauth_code') {
@@ -48,7 +51,7 @@ serve(async (req) => {
       }
 
       try {
-        console.log('[OAuth] Exchanging code for tokens...');
+        log.info('[OAuth] Exchanging code for tokens');
         
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
           method: 'POST',
@@ -64,12 +67,12 @@ serve(async (req) => {
 
         if (!tokenResponse.ok) {
           const errorData = await tokenResponse.text();
-          console.error('[OAuth] Token exchange error:', errorData);
+          log.error('[OAuth] Token exchange error', { error: errorData });
           throw new Error(`Failed to exchange code: ${errorData}`);
         }
 
         const tokens = await tokenResponse.json();
-        console.log('[OAuth] Tokens obtained successfully for user:', user.id);
+        log.info('[OAuth] Tokens obtained successfully for user', { userId: user.id });
 
         // TODO: Store refresh_token securely for long-term access
         // For now, returning success without storing tokens
@@ -80,7 +83,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (error: any) {
-        console.error('[OAuth] Error:', error);
+        log.error('[OAuth] Error', { error: error?.message ?? String(error) });
         throw error;
       }
     }
@@ -110,7 +113,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    console.error('[Google Integration] Error:', error.message);
+    log.error('[Google Integration] Error', { error: error?.message ?? String(error) });
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       {
@@ -147,11 +150,11 @@ async function createGoogleMeeting(
       .eq('id', appointmentData.appointmentId);
 
     if (updateError) {
-      console.error('[Meet] Failed to update appointment:', updateError);
+      log.error('[Meet] Failed to update appointment', { error: updateError?.message ?? String(updateError) });
       throw new Error(`Failed to update appointment: ${updateError.message}`);
     }
 
-    console.log(`[Meet] Updated appointment ${appointmentData.appointmentId} with Meet link`);
+    log.info('[Meet] Updated appointment with Meet link', { appointmentId: appointmentData.appointmentId });
 
     return {
       meetLink: meetLink,
@@ -159,7 +162,7 @@ async function createGoogleMeeting(
       note: 'Open in browser to create or join a meeting',
     };
   } catch (error: any) {
-    console.error('[Meet] Error:', error);
+    log.error('[Meet] Error', { error: error?.message ?? String(error) });
     throw error;
   }
 }
@@ -174,7 +177,7 @@ async function syncGoogleCalendar(
   supabase: any
 ): Promise<any> {
   try {
-    console.log('[Calendar] Fetching appointments for user:', userId);
+    log.info('[Calendar] Fetching appointments for user', { userId });
 
     // Fetch appointments from database
     const { data: appointments, error } = await supabase
@@ -188,7 +191,7 @@ async function syncGoogleCalendar(
       throw new Error(`Failed to fetch appointments: ${error.message}`);
     }
 
-    console.log(`[Calendar] Found ${appointments?.length || 0} appointments to sync`);
+    log.info('[Calendar] Found appointments to sync', { count: appointments?.length || 0 });
 
     // For now, returning appointment count
     // TODO: Implement Calendar API integration with OAuth
@@ -201,7 +204,7 @@ async function syncGoogleCalendar(
       appointments: appointments,
     };
   } catch (error: any) {
-    console.error('[Calendar] Error:', error);
+    log.error('[Calendar] Error', { error: error?.message ?? String(error) });
     throw error;
   }
 }

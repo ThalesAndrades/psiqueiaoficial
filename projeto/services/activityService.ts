@@ -30,7 +30,7 @@ class ActivityService {
         PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION
       );
       return hasPermission;
-    } catch (err) {
+    } catch (err: unknown) {
       console.warn('Error checking activity permission:', err);
       return false;
     }
@@ -62,7 +62,7 @@ class ActivityService {
       );
 
       return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
+    } catch (err: unknown) {
       console.warn('Error requesting activity permission:', err);
       return false;
     }
@@ -77,7 +77,7 @@ class ActivityService {
         this.storageKey,
         JSON.stringify(activityData)
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error storing activity data:', error);
       throw error;
     }
@@ -90,7 +90,7 @@ class ActivityService {
     try {
       const data = await SecureStore.getItemAsync(this.storageKey);
       return data ? JSON.parse(data) : null;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error retrieving activity data:', error);
       return null;
     }
@@ -137,7 +137,7 @@ class ActivityService {
 
       await this.storeActivityData(mockData);
       return mockData;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting activity data:', error);
       return [];
     }
@@ -149,7 +149,7 @@ class ActivityService {
   async clearActivityData(): Promise<void> {
     try {
       await SecureStore.deleteItemAsync(this.storageKey);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error clearing activity data:', error);
     }
   }
@@ -159,7 +159,7 @@ class ActivityService {
    */
   async correlateWithMood(activityData: ActivityData[], moodEntries: any[]): Promise<any> {
     // Group by date
-    const correlations = activityData.map((activity) => {
+    const correlations = activityData.map((activity: ActivityData) => {
       const mood = moodEntries.find(
         (entry) => entry.entry_date === activity.date
       );

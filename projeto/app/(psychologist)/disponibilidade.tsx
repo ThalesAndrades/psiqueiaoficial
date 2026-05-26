@@ -87,7 +87,7 @@ export default function DisponibilidadeScreen() {
     // Validar que pelo menos um dia está habilitado
     const hasEnabledDay = Object.values(schedule).some((day) => day.enabled);
     if (!hasEnabledDay) {
-      Alert.alert('Erro', 'Você precisa habilitar pelo menos um dia de atendimento.');
+      toastManager.show({ type: 'error', message: 'Você precisa habilitar pelo menos um dia de atendimento.' });
       return;
     }
 
@@ -99,7 +99,7 @@ export default function DisponibilidadeScreen() {
         
         if (startIndex >= endIndex) {
           const dayLabel = DAYS_OF_WEEK.find((d) => d.key === dayKey)?.label || dayKey;
-          Alert.alert('Erro', `O horário de início deve ser anterior ao horário de término em ${dayLabel}.`);
+          toastManager.show({ type: 'error', message: `O horário de início deve ser anterior ao horário de término em ${dayLabel}.` });
           return;
         }
       }
@@ -112,7 +112,7 @@ export default function DisponibilidadeScreen() {
       });
 
       if (error) {
-        Alert.alert('Erro', error);
+        toastManager.show({ type: 'error', message: error });
         return;
       }
 
@@ -127,7 +127,7 @@ export default function DisponibilidadeScreen() {
 
       router.back();
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao salvar disponibilidade.');
+      toastManager.show({ type: 'error', message: error.message || 'Erro ao salvar disponibilidade.' });
     } finally {
       setSaving(false);
     }

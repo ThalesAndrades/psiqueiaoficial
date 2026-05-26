@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { createLogger } from '../_shared/logger.ts';
+
+const log = createLogger('send-email');
 
 interface SendEmailRequest {
   to: string;
@@ -210,14 +213,14 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(token);
 
     if (!user) {
-      console.warn('[Email] Unauthorized request attempted');
+      log.warn('[Email] Unauthorized request attempted');
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[Email] Request from user: ${user.id}`);
+    log.info('[Email] Request from user', { userId: user.id });
 
     const { to, subject, html, text, template, templateData }: SendEmailRequest = await req.json();
 
@@ -270,12 +273,12 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[Email] Sending to: ${to}, template: ${template || 'custom'}`);
+    log.info('[Email] Sending', { to, template: template || 'custom' });
 
     // Send email using Resend with retry logic
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
-      console.warn('[Email] RESEND_API_KEY not configured');
+      log.warn('[Email] RESEND_API_KEY not configured');
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -291,7 +294,7 @@ serve(async (req) => {
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        console.log(`[Email] Attempt ${attempt}/${MAX_RETRIES}`);
+        log.info('[Email] Attempt', { attempt, maxRetries: MAX_RETRIES });
 
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -311,7 +314,7 @@ serve(async (req) => {
         const result = await response.json();
 
         if (response.ok) {
-          console.log(`[Email] Sent successfully: ${result.id}`);
+          log.info('[Email] Sent successfully', { messageId: result.id });
           return new Response(
             JSON.stringify({ success: true, messageId: result.id }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -319,7 +322,7 @@ serve(async (req) => {
         }
 
         lastError = result;
-        console.error(`[Email] Attempt ${attempt} failed:`, result);
+        log.error('[Email] Attempt failed', { attempt, result });
 
         // Don't retry on 4xx errors (client errors)
         if (response.status >= 400 && response.status < 500) {
@@ -332,7 +335,7 @@ serve(async (req) => {
         }
       } catch (error: any) {
         lastError = error;
-        console.error(`[Email] Attempt ${attempt} error:`, error);
+        log.error('[Email] Attempt error', { attempt, error: error?.message ?? String(error) });
 
         if (attempt < MAX_RETRIES) {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
@@ -341,13 +344,13 @@ serve(async (req) => {
     }
 
     // All retries failed
-    console.error('[Email] All attempts failed:', lastError);
+    log.error('[Email] All attempts failed', { error: lastError?.message ?? String(lastError) });
     return new Response(
       JSON.stringify({ error: lastError.message || 'Failed to send email after retries' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('[Email] Unexpected error:', error);
+    log.error('[Email] Unexpected error', { error: error?.message ?? String(error) });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

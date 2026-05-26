@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,6 +9,7 @@ import { useAppData } from '../../hooks/useAppData';
 import { analyticsService, paymentService } from '../../services';
 import { LoadingSpinner } from '../../components';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { toastManager } from '../../components/ui/Toast';
 
 const monthlyData = {
   totalReceived: 18500,
@@ -90,7 +91,7 @@ export default function FinanceiroScreen() {
   useEffect(() => {
     // Check if returning from Stripe setup
     if (params.setup === 'complete') {
-      Alert.alert('Configuração Concluída', 'Sua conta Stripe foi configurada com sucesso!');
+      toastManager.show({ type: 'success', message: 'Sua conta Stripe foi configurada com sucesso!' });
       checkConnectStatus();
       // Clear params
       router.replace('/(psychologist)/financeiro');
@@ -122,7 +123,7 @@ export default function FinanceiroScreen() {
       }
 
       if (result.error) {
-        Alert.alert('Erro', result.error);
+        toastManager.show({ type: 'error', message: result.error });
         setIsLoadingConnect(false);
         return;
       }
@@ -135,12 +136,12 @@ export default function FinanceiroScreen() {
           if (supported) {
             await Linking.openURL(result.data.url);
           } else {
-            Alert.alert('Erro', 'Não foi possível abrir o link de configuração');
+            toastManager.show({ type: 'error', message: 'Não foi possível abrir o link de configuração' });
           }
         }
       }
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao configurar Stripe Connect');
+      toastManager.show({ type: 'error', message: error.message || 'Erro ao configurar Stripe Connect' });
     } finally {
       setIsLoadingConnect(false);
     }
@@ -148,11 +149,11 @@ export default function FinanceiroScreen() {
 
   const handleOpenStripeDashboard = async () => {
     setIsLoadingConnect(true);
-    
+
     const { data, error } = await paymentService.createLoginLink();
-    
+
     if (error) {
-      Alert.alert('Erro', error);
+      toastManager.show({ type: 'error', message: error });
       setIsLoadingConnect(false);
       return;
     }
@@ -165,11 +166,11 @@ export default function FinanceiroScreen() {
         if (supported) {
           await Linking.openURL(data.url);
         } else {
-          Alert.alert('Erro', 'Não foi possível abrir o dashboard');
+          toastManager.show({ type: 'error', message: 'Não foi possível abrir o dashboard' });
         }
       }
     }
-    
+
     setIsLoadingConnect(false);
   };
 
