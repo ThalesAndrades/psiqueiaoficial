@@ -149,7 +149,7 @@ Certifique-se de que o `app.json` está configurado corretamente:
 ```json
 {
   "expo": {
-    "scheme": "onspaceapp",
+    "scheme": "psiqueia",
     "ios": {
       "bundleIdentifier": "host.exp.exponent"
     },

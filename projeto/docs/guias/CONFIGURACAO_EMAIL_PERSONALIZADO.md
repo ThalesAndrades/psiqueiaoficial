@@ -121,12 +121,12 @@ No Supabase Dashboard → **Authentication** → **Email Templates**, personaliz
 
 No Supabase Dashboard → **Project Settings** → **Authentication** → **URL Configuration**:
 
-- **Site URL**: `https://psiqueia.com` ou `onspaceapp://auth` (para mobile)
+- **Site URL**: `https://psiqueia.com` ou `psiqueia://auth` (para mobile)
 - **Redirect URLs**: Adicione todas as URLs permitidas:
   - `https://psiqueia.com/*`
   - `https://www.psiqueia.com/*`
-  - `onspaceapp://auth`
-  - `onspaceapp:///*`
+  - `psiqueia://auth`
+  - `psiqueia:///*`
 
 ### Passo 2: Configurar Deep Linking
 
@@ -135,7 +135,7 @@ Para que os links de confirmação funcionem no app mobile, certifique-se de que
 ```json
 {
   "expo": {
-    "scheme": "onspaceapp",
+    "scheme": "psiqueia",
     "ios": {
       "bundleIdentifier": "com.psiqueia.app",
       "associatedDomains": ["applinks:psiqueia.com"]
@@ -153,7 +153,7 @@ Para que os links de confirmação funcionem no app mobile, certifique-se de que
               "pathPrefix": "/auth"
             },
             {
-              "scheme": "onspaceapp"
+              "scheme": "psiqueia"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

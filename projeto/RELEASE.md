@@ -72,8 +72,34 @@ eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value '
 # add any other EXPO_PUBLIC_* the app reads from process.env
 ```
 
-Server-side secrets (Stripe, Resend, OpenAI/OnSpace, service-role, etc.)
-go in Supabase Edge Function settings — not in the mobile bundle.
+### 0.5 Edge Function secrets (Supabase)
+
+Each Edge Function reads its config from `Deno.env.get(...)`. Set these
+once per environment via the Supabase Dashboard
+(Project Settings → Edge Functions → Secrets) or
+`supabase secrets set KEY=value`. `projeto/.env.example` has the canonical
+list with comments; the table below is the at-a-glance summary.
+
+| Secret | Used by | Notes |
+|---|---|---|
+| `STRIPE_SECRET_KEY` | stripe-payment | `sk_live_…` in prod, `sk_test_…` in test |
+| `STRIPE_WEBHOOK_SECRET` | stripe-payment | from Stripe Dashboard → Webhooks → Signing secret |
+| `PLATFORM_FEE_PERCENT` | stripe-payment | defaults to `10` if unset |
+| `RESEND_API_KEY` | send-email | `re_…` |
+| `ONSPACE_AI_API_KEY` | ai-agent | LLM gateway key |
+| `ONSPACE_AI_BASE_URL` | ai-agent | usually `https://api.onspace.…` |
+| `GOOGLE_CLIENT_ID` | google-integration | OAuth client id |
+| `GOOGLE_CLIENT_SECRET` | google-integration | OAuth client secret |
+| `ALLOWED_ORIGINS` | _shared/cors | comma-separated; if unset uses built-in list (`psiqueia.com`, `www.psiqueia.com`, `app.psiqueia.com`, localhost) — verify those domains are correct for your deployment |
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are
+auto-injected by Supabase at function runtime — do NOT set them yourself.
+
+After setting any secret, redeploy the function that reads it:
+
+```bash
+supabase functions deploy stripe-payment  # repeat per function as needed
+```
 
 ## 1. Create the app skeleton in both stores
 
@@ -222,8 +248,12 @@ and `EXPO_PUBLIC_*` repo secrets as the build workflow.
 
 ## 8. Building from GitHub Actions (optional)
 
-`.github/workflows/eas-build.yml` exposes a manual-dispatch workflow
-that runs the same lint/typecheck/test gate as CI, then calls
+The workflows live at the **repo root** (`/.github/workflows/`), not under
+`projeto/.github/workflows/` (which only contains a README). Two are
+relevant here: `ci.yml` (auto on push/PR) and `eas-build.yml` +
+`eas-update.yml` (manual dispatch).
+
+`eas-build.yml` runs the same lint/typecheck/test gate as CI, then calls
 `eas build` (and optionally `eas submit`) from a clean Ubuntu runner.
 It never runs on push — only when you trigger it from the Actions tab.
 
@@ -231,12 +261,13 @@ Required repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Purpose |
 |---|---|
-| `EXPO_TOKEN` | EAS API token (`eas login` → `eas whoami --json` or [generate one](https://expo.dev/accounts/settings/access-tokens)) |
+| `EXPO_TOKEN` | EAS API token ([generate one](https://expo.dev/accounts/settings/access-tokens)) |
 | `EXPO_PUBLIC_SUPABASE_URL` | Mirrors the EAS secret of the same name; lets `eas build` surface missing-config errors before the cloud build starts |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as above |
 | `APPLE_ID` | Only used when submitting to App Store |
 | `ASC_APP_ID` | Only used when submitting to App Store |
 | `APPLE_TEAM_ID` | Only used when submitting to App Store |
+| `APPLE_APP_SPECIFIC_PASSWORD` | Optional — needed by `eas submit` when 2FA is enabled on the Apple ID and you're not using ASC API Key |
 
 Trigger flow:
 

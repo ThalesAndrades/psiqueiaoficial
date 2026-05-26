@@ -41,8 +41,7 @@
         "UIBackgroundModes": ["remote-notification"]
       },
       "associatedDomains": [
-        "applinks:psiqueia.com",
-        "applinks:wbwquhhlbjxkhupvfphy.supabase.co"
+        "applinks:psiqueia.com"
       ]
     },
     "android": {

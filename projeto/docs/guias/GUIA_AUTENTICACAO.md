@@ -118,7 +118,7 @@ await invitationService.createInvitation(
 
 **2. Receber Email:**
 - Email contém link mágico para redefinir senha
-- Link redireciona para: `onspaceapp://reset-password`
+- Link redireciona para: `psiqueia://reset-password`
 - Token de segurança incluído automaticamente
 
 **3. Redefinir Senha:**
