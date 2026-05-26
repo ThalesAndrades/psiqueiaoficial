@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -102,17 +102,17 @@ export default function EditarPerfilScreen() {
 
     // Validações
     if (!profile.crp.trim()) {
-      Alert.alert('Erro', 'O número do CRP é obrigatório.');
+      toastManager.show({ type: 'error', message: 'O número do CRP é obrigatório.' });
       return;
     }
 
     if (profile.session_price <= 0) {
-      Alert.alert('Erro', 'O valor da sessão deve ser maior que zero.');
+      toastManager.show({ type: 'error', message: 'O valor da sessão deve ser maior que zero.' });
       return;
     }
 
     if (profile.specializations.length === 0) {
-      Alert.alert('Erro', 'Selecione pelo menos uma especialização.');
+      toastManager.show({ type: 'error', message: 'Selecione pelo menos uma especialização.' });
       return;
     }
 
@@ -128,7 +128,7 @@ export default function EditarPerfilScreen() {
       });
 
       if (error) {
-        Alert.alert('Erro', error);
+        toastManager.show({ type: 'error', message: error });
         return;
       }
 
@@ -144,7 +144,7 @@ export default function EditarPerfilScreen() {
 
       router.back();
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao salvar perfil.');
+      toastManager.show({ type: 'error', message: error.message || 'Erro ao salvar perfil.' });
     } finally {
       setSaving(false);
     }

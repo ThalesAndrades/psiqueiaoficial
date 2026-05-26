@@ -239,7 +239,7 @@ export default function NovaSessaoScreen() {
       setPsychologistData(data);
     } catch (err: any) {
       console.error('Unexpected error:', err);
-      Alert.alert('Erro', 'Não foi possível carregar os dados do psicólogo.');
+      toastManager.show({ type: 'error', message: 'Não foi possível carregar os dados do psicólogo.' });
       router.back();
     } finally {
       setLoadingPsychologist(false);
@@ -278,17 +278,17 @@ export default function NovaSessaoScreen() {
 
   const handleCreateAppointment = async () => {
     if (!selectedTime) {
-      Alert.alert('Erro', 'Por favor, selecione um horário');
+      toastManager.show({ type: 'error', message: 'Por favor, selecione um horário' });
       return;
     }
 
     if (!userProfile?.id) {
-      Alert.alert('Erro', 'Usuário não autenticado');
+      toastManager.show({ type: 'error', message: 'Usuário não autenticado' });
       return;
     }
 
     if (!psychologistData) {
-      Alert.alert('Erro', 'Psicólogo não encontrado. Por favor, volte e tente novamente.');
+      toastManager.show({ type: 'error', message: 'Psicólogo não encontrado. Por favor, volte e tente novamente.' });
       return;
     }
 
@@ -314,7 +314,7 @@ export default function NovaSessaoScreen() {
 
       // Verificar se a data é no futuro
       if (scheduledAt <= new Date()) {
-        Alert.alert('Erro', 'Por favor, selecione uma data e horário no futuro.');
+        toastManager.show({ type: 'error', message: 'Por favor, selecione uma data e horário no futuro.' });
         setIsCreating(false);
         return;
       }
@@ -332,7 +332,7 @@ export default function NovaSessaoScreen() {
       });
 
       if (createError || !appointment) {
-        Alert.alert('Erro', createError || 'Não foi possível criar a sessão');
+        toastManager.show({ type: 'error', message: createError || 'Não foi possível criar a sessão' });
         setIsCreating(false);
         return;
       }
@@ -363,7 +363,7 @@ export default function NovaSessaoScreen() {
       }
     } catch (error: any) {
       console.error('Create appointment error:', error);
-      Alert.alert('Erro', error.message || 'Não foi possível criar a sessão');
+      toastManager.show({ type: 'error', message: error.message || 'Não foi possível criar a sessão' });
     } finally {
       setIsCreating(false);
     }

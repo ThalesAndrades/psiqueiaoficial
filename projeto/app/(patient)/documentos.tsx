@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { theme } from '../../constants/theme';
 import { googleService } from '../../services/googleService';
 import { LoadingSpinner, FadeInView } from '../../components';
+import { toastManager } from '../../components/ui/Toast';
 
 interface SharedDocument {
   id: string;
@@ -29,7 +30,7 @@ export default function DocumentosScreen() {
     const { data, error } = await googleService.getSharedDocuments();
     
     if (error) {
-      Alert.alert('Erro', 'Não foi possível carregar documentos');
+      toastManager.show({ type: 'error', message: 'Não foi possível carregar documentos' });
       setLoading(false);
       return;
     }
@@ -56,10 +57,10 @@ export default function DocumentosScreen() {
       if (supported) {
         await Linking.openURL(doc.drive_url);
       } else {
-        Alert.alert('Erro', 'Não foi possível abrir o documento');
+        toastManager.show({ type: 'error', message: 'Não foi possível abrir o documento' });
       }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível abrir o documento');
+      toastManager.show({ type: 'error', message: 'Não foi possível abrir o documento' });
     }
   };
 

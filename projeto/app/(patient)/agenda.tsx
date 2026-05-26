@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,6 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { analyticsService } from '../../services';
 import { LoadingSpinner, FadeInView, GoogleMeetViewer } from '../../components';
 import { googleService } from '../../services/googleService';
+import { toastManager } from '../../components/ui/Toast';
 
 const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -114,12 +115,12 @@ export default function AgendaScreen() {
 
   const handleJoinMeeting = (meetLink: string | null) => {
     if (!meetLink) {
-      Alert.alert('Link Indisponível', 'O link da reunião ainda não foi gerado. Aguarde ou entre em contato com seu psicólogo.');
+      toastManager.show({ type: 'info', message: 'Link Indisponível: O link da reunião ainda não foi gerado. Aguarde ou entre em contato com seu psicólogo.' });
       return;
     }
     // Detectar placeholder
     if (meetLink.includes('abc-defg-hij')) {
-      Alert.alert('Link Temporário', 'O link real será gerado automaticamente após a confirmação do pagamento.');
+      toastManager.show({ type: 'info', message: 'Link Temporário: O link real será gerado automaticamente após a confirmação do pagamento.' });
       return;
     }
     setSelectedMeeting(meetLink);
@@ -127,7 +128,7 @@ export default function AgendaScreen() {
 
   const handleSyncCalendar = async () => {
     if (!userProfile?.email) {
-      Alert.alert('Erro', 'Email não disponível');
+      toastManager.show({ type: 'error', message: 'Email não disponível' });
       return;
     }
 
@@ -137,9 +138,9 @@ export default function AgendaScreen() {
     });
 
     if (error) {
-      Alert.alert('Erro ao Sincronizar', error);
+      toastManager.show({ type: 'error', message: `Erro ao Sincronizar: ${error}` });
     } else {
-      Alert.alert('Sucesso', `${data?.synced || 0} eventos sincronizados com Google Calendar`);
+      toastManager.show({ type: 'success', message: `${data?.synced || 0} eventos sincronizados com Google Calendar` });
       await loadAppointments();
     }
     setLoading(false);

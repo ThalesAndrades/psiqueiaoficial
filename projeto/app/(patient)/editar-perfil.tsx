@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -72,7 +72,7 @@ export default function EditarPerfilPatientScreen() {
 
     // Validações
     if (!profile.full_name.trim()) {
-      Alert.alert('Erro', 'O nome completo é obrigatório.');
+      toastManager.show({ type: 'error', message: 'O nome completo é obrigatório.' });
       return;
     }
 
@@ -86,7 +86,7 @@ export default function EditarPerfilPatientScreen() {
       });
 
       if (userError) {
-        Alert.alert('Erro', userError);
+        toastManager.show({ type: 'error', message: userError });
         setSaving(false);
         return;
       }
@@ -114,7 +114,7 @@ export default function EditarPerfilPatientScreen() {
 
       router.back();
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao salvar perfil.');
+      toastManager.show({ type: 'error', message: error.message || 'Erro ao salvar perfil.' });
     } finally {
       setSaving(false);
     }

@@ -10,6 +10,7 @@ import { theme } from '../../constants/theme';
 import { useAppData } from '../../hooks/useAppData';
 import { LoadingSpinner, FadeInView } from '../../components';
 import { googleService } from '../../services/googleService';
+import { toastManager } from '../../components/ui/Toast';
 
 export default function PacientesScreen() {
   const insets = useSafeAreaInsets();
@@ -40,7 +41,7 @@ export default function PacientesScreen() {
 
   const handleShareDocument = async () => {
     if (!selectedPatient) {
-      Alert.alert('Erro', 'Selecione um paciente');
+      toastManager.show({ type: 'error', message: 'Selecione um paciente' });
       return;
     }
 
@@ -80,7 +81,7 @@ export default function PacientesScreen() {
       setUploadingFile(false);
     } catch (error: any) {
       console.error('Document picker error:', error);
-      Alert.alert('Erro', 'Não foi possível selecionar o arquivo');
+      toastManager.show({ type: 'error', message: 'Não foi possível selecionar o arquivo' });
       setUploadingFile(false);
     }
   };
@@ -97,9 +98,9 @@ export default function PacientesScreen() {
     });
 
     if (error) {
-      Alert.alert('Erro ao Compartilhar', error);
+      toastManager.show({ type: 'error', message: `Erro ao Compartilhar: ${error}` });
     } else {
-      Alert.alert('Sucesso', 'Documento compartilhado com sucesso!');
+      toastManager.show({ type: 'success', message: 'Documento compartilhado com sucesso!' });
       setShareModalVisible(false);
       setFileDescription('');
     }
