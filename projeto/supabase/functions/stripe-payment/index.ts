@@ -422,39 +422,44 @@ serve(async (req) => {
           log.error('[Webhook] Error updating transaction', { error: error });
         }
 
-        // Update appointment payment status and create Meet link
+        // Update appointment payment status and (only on first delivery)
+        // create the Meet link. Stripe retries duplicate webhooks for ~3 hours;
+        // we must NOT overwrite an existing link on retry or the patient and
+        // psychologist receive a new URL each time and the one already sent
+        // out by email/push goes dead.
         if (session.metadata?.appointment_id) {
-          // Buscar dados do agendamento
           const { data: appointment } = await supabaseAdmin
             .from('appointments')
-            .select(`
-              *,
-              patient:patient_id (id, full_name, email),
-              psychologist:psychologist_id (id, full_name, email)
-            `)
+            .select('google_meet_link, meet_link')
             .eq('id', session.metadata.appointment_id)
             .single();
 
-          // Gerar um link de placeholder para o Google Meet
-          // (Em produção, isso seria integrado com a API do Google Calendar)
-          const meetId = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
-          const meetLink = `https://meet.google.com/${meetId.substring(0, 3)}-${meetId.substring(3, 7)}-${meetId.substring(7, 11)}`;
+          const alreadyHasLink = Boolean(appointment?.google_meet_link || appointment?.meet_link);
 
-          // Atualizar o agendamento com o status de pagamento e o link do Meet
+          let update: Record<string, unknown> = {
+            payment_status: 'paid',
+            status: 'confirmed',
+          };
+
+          if (!alreadyHasLink) {
+            const meetId = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
+            const meetLink = `https://meet.google.com/${meetId.substring(0, 3)}-${meetId.substring(3, 7)}-${meetId.substring(7, 11)}`;
+            update.google_meet_link = meetLink;
+            update.meet_link = meetLink;
+          }
+
           const { error: updateError } = await supabaseAdmin
             .from('appointments')
-            .update({ 
-              payment_status: 'paid', 
-              status: 'confirmed',
-              google_meet_link: meetLink,
-              meet_link: meetLink,
-            })
+            .update(update)
             .eq('id', session.metadata.appointment_id);
 
           if (updateError) {
             log.error('[Webhook] Error updating appointment', { error: updateError });
           } else {
-            log.info('[Webhook] Appointment confirmed with Meet link', { appointmentId: session.metadata.appointment_id, meetLink });
+            log.info('[Webhook] Appointment confirmed', {
+              appointmentId: session.metadata.appointment_id,
+              regeneratedMeetLink: !alreadyHasLink,
+            });
           }
         }
       }

@@ -37,9 +37,21 @@ export const diaryService = {
   },
 
   async createDiaryEntry(entryData: Partial<DiaryEntry>) {
+    // Belt-and-suspenders: stamp patient_id from the auth session, ignoring
+    // anything the caller passed. The real security guarantee is the RLS
+    // policy on diary_entries (`auth.uid() = patient_id`), but this also
+    // catches client-side mistakes that would otherwise insert into the
+    // wrong patient's diary.
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { data: null, error: 'Não autenticado' };
+    }
+
+    const payload = { ...entryData, patient_id: user.id };
+
     const { data, error } = await supabase
       .from('diary_entries')
-      .insert(entryData)
+      .insert(payload)
       .select()
       .single();
 

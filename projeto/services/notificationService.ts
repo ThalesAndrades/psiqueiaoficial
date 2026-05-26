@@ -125,8 +125,11 @@ export const notificationService = {
   },
 
   subscribeToNotifications(userId: string, callback: (notification: Notification) => void) {
+    // Channel name MUST be unique per user — a shared 'notifications' slug
+    // means a fast logout-login on the same device could route user B's
+    // INSERT to a callback that still captures user A's state.
     const channel = supabase
-      .channel('notifications')
+      .channel(`notifications:${userId}`)
       .on(
         'postgres_changes',
         {
