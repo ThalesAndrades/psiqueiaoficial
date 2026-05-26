@@ -29,7 +29,7 @@ export const paymentService = {
     description?: string,
   ): Promise<{ data: PaymentIntent | null; error: string | null }> {
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=create-payment-intent', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: {
           action: 'create-payment-intent',
           appointmentId,
@@ -73,7 +73,7 @@ export const paymentService = {
       // the reliable channel since supabase-js does not forward query strings
       // appended to the function slug. Amount is sourced server-side from the
       // appointment row, so never sent here.
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=create-checkout', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: {
           action: 'create-checkout',
           appointmentId,
@@ -113,7 +113,7 @@ export const paymentService = {
   }> {
     try {
       const { data, error } = await supabase.functions.invoke(
-        `stripe-payment?action=payment-status&payment_intent_id=${paymentIntentId}`,
+        'stripe-payment',
         { body: { action: 'payment-status', payment_intent_id: paymentIntentId } }
       );
 
@@ -143,7 +143,7 @@ export const paymentService = {
    */
   async createConnectAccount(): Promise<{ data: { url: string; accountId: string } | null; error: string | null }> {
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=create-connect-account', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: { action: 'create-connect-account' },
       });
 
@@ -180,7 +180,7 @@ export const paymentService = {
     error: string | null;
   }> {
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=verify-psychologist', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: { action: 'verify-psychologist', psychologistId },
       });
 
@@ -214,7 +214,7 @@ export const paymentService = {
     error: string | null;
   }> {
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=connect-account-status', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: { action: 'connect-account-status' },
       });
 
@@ -245,7 +245,7 @@ export const paymentService = {
    */
   async createConnectAccountLink(): Promise<{ data: { url: string } | null; error: string | null }> {
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=create-connect-account-link', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: { action: 'create-connect-account-link' },
       });
 
@@ -275,7 +275,7 @@ export const paymentService = {
    */
   async createLoginLink(): Promise<{ data: { url: string } | null; error: string | null }> {
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-payment?action=create-login-link', {
+      const { data, error } = await supabase.functions.invoke('stripe-payment', {
         body: { action: 'create-login-link' },
       });
 

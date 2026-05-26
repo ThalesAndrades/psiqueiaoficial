@@ -74,7 +74,7 @@ serve(async (req) => {
       // have a recorded relationship with (psychologist <-> patient).
       if (userId !== user.id) {
         const { data: rel } = await supabase
-          .from('patient_psychologist_relations')
+          .from('patient_psychologist')
           .select('id')
           .eq('status', 'active')
           .or(`and(patient_id.eq.${user.id},psychologist_id.eq.${userId}),and(patient_id.eq.${userId},psychologist_id.eq.${user.id})`)
@@ -185,7 +185,7 @@ serve(async (req) => {
 
       // Restrict targets to patients linked to this psychologist.
       const { data: relations } = await supabase
-        .from('patient_psychologist_relations')
+        .from('patient_psychologist')
         .select('patient_id')
         .eq('psychologist_id', user.id)
         .eq('status', 'active');

@@ -15,11 +15,16 @@
 --
 -- PACIENTE DE TESTE:
 --   Email: revisor.paciente@psiqueia.com
---   Senha: Revisor@Paciente2025
+--   Senha: <gerada localmente, NUNCA commitada — ver docs/REVIEWER_INSTRUCTIONS.md>
 --
 -- PSICÓLOGO DE TESTE:
 --   Email: revisor.psicologo@psiqueia.com
---   Senha: Revisor@Psicologo2025
+--   Senha: <gerada localmente, NUNCA commitada — ver docs/REVIEWER_INSTRUCTIONS.md>
+--
+-- IMPORTANTE: As senhas reais devem ser geradas no momento de criar o usuário
+-- no Supabase Dashboard (use o gerador embutido ou um manager). Compartilhe
+-- apenas pelo formulário privado de App Store Connect e Play Console — NUNCA
+-- coloque a senha em arquivos de código ou docs públicas.
 --
 -- Após criar, copie os UUIDs gerados e substitua nos placeholders abaixo.
 -- ============================================================================
@@ -274,8 +279,9 @@ INSERT INTO diary_entries (
 );
 
 RAISE NOTICE 'Contas de teste criadas com sucesso!';
-RAISE NOTICE 'Paciente: revisor.paciente@psiqueia.com / Revisor@Paciente2025';
-RAISE NOTICE 'Psicólogo: revisor.psicologo@psiqueia.com / Revisor@Psicologo2025';
+RAISE NOTICE 'Paciente: revisor.paciente@psiqueia.com';
+RAISE NOTICE 'Psicólogo: revisor.psicologo@psiqueia.com';
+RAISE NOTICE 'As senhas foram definidas no Supabase Dashboard ao criar os usuários.';
 
 END $$;
 

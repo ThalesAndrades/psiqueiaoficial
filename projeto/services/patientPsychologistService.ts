@@ -72,6 +72,25 @@ export const patientPsychologistService = {
 
   async createRelation(patientId: string, psychologistId: string) {
     try {
+      // Pre-check: if an active or pending relation already exists, return it
+      // instead of creating a duplicate. A duplicate would break the
+      // .single() in getMyPsychologist (PGRST116 "multiple rows returned")
+      // and leave the patient permanently unable to load their dashboard.
+      // The DB should ALSO have a UNIQUE constraint on (patient_id,
+      // psychologist_id) — this is a belt-and-suspenders check for the case
+      // where the constraint is missing.
+      const { data: existing } = await supabase
+        .from('patient_psychologist')
+        .select('*')
+        .eq('patient_id', patientId)
+        .eq('psychologist_id', psychologistId)
+        .in('status', ['active', 'pending'])
+        .maybeSingle();
+
+      if (existing) {
+        return { data: existing as PatientPsychologistRelation, error: null };
+      }
+
       const { data, error } = await supabase
         .from('patient_psychologist')
         .insert({

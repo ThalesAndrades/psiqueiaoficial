@@ -89,12 +89,22 @@ export const pushNotificationService = {
   },
 
   /**
-   * Initialize push notifications
+   * Initialize push notifications. NEVER throws — any failure (Expo project
+   * id missing, savePushToken network error, permissions denied) is logged
+   * and swallowed so the caller (_layout's useEffect) doesn't produce an
+   * unhandled rejection and the rest of app startup keeps moving.
    */
   async initialize(): Promise<void> {
-    const token = await this.registerForPushNotifications();
-    if (token) {
-      await this.savePushToken(token);
+    try {
+      const token = await this.registerForPushNotifications();
+      if (token) {
+        const { success, error } = await this.savePushToken(token);
+        if (!success) {
+          console.warn('[Push] savePushToken failed:', error);
+        }
+      }
+    } catch (err) {
+      console.warn('[Push] initialize failed:', err);
     }
   },
 

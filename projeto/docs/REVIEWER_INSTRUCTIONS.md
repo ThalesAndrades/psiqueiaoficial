@@ -1,4 +1,4 @@
-_# Instruções para Revisão – PsiquèIA
+# Instruções para Revisão – PsiquèIA
 
 **Assunto:** Informações para Revisão do App PsiquèIA
 
