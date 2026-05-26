@@ -9,7 +9,7 @@ import { profileService } from './profileService';
 let AppleAuthentication: any = null;
 try {
   AppleAuthentication = require('expo-apple-authentication');
-} catch (e) {
+} catch (e: unknown) {
   console.log('Apple Authentication not available in this environment');
 }
 

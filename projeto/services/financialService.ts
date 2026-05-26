@@ -47,7 +47,7 @@ export interface FinancialStats {
  */
 function calculateTotal(transactions: { amount: number }[] | null): number {
   if (!transactions || transactions.length === 0) return 0;
-  return transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  return transactions.reduce((sum: number, t: { amount: number }) => sum + Number(t.amount || 0), 0);
 }
 
 export const financialService = {
@@ -85,7 +85,7 @@ export const financialService = {
       }
 
       return { data: data as TransactionWithRelations[], error: null };
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar transações';
       console.error('[FinancialService] getTransactions exception:', err);
       return { data: null, error: errorMessage };
@@ -127,7 +127,7 @@ export const financialService = {
       }
 
       return { data: data as FinancialTransaction, error: null };
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar transação';
       console.error('[FinancialService] createTransaction exception:', err);
       return { data: null, error: errorMessage };
@@ -162,7 +162,7 @@ export const financialService = {
 
       const total = calculateTotal(data);
       return { data: total, error: null };
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao calcular receita mensal';
       console.error('[FinancialService] getMonthlyRevenue exception:', err);
       return { data: null, error: errorMessage };
@@ -222,7 +222,7 @@ export const financialService = {
         },
         error: null,
       };
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar estatísticas';
       console.error('[FinancialService] getFinancialStats exception:', err);
       return { data: null, error: errorMessage };
@@ -250,7 +250,7 @@ export const financialService = {
       }
 
       return { data: data as FinancialTransaction, error: null };
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar transação';
       console.error('[FinancialService] updateTransactionStatus exception:', err);
       return { data: null, error: errorMessage };

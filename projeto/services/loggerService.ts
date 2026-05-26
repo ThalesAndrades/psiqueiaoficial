@@ -1,7 +1,7 @@
 class LoggerService {
   private isDevelopment = __DEV__;
 
-  error(context: string, message: string, error?: any) {
+  error(context: string, message: string, error?: unknown) {
     console.error(`[${context}] ${message}`);
     if (error) {
       console.error(error);
@@ -14,13 +14,13 @@ class LoggerService {
     }
   }
 
-  info(context: string, message: string, data?: any) {
+  info(context: string, message: string, data?: unknown) {
     if (this.isDevelopment) {
       console.log(`[${context}] ${message}`, data || '');
     }
   }
 
-  log(context: string, message: string, data?: any) {
+  log(context: string, message: string, data?: unknown) {
     if (this.isDevelopment) {
       console.log(`[${context}] ${message}`, data || '');
     }

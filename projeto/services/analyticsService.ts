@@ -29,7 +29,7 @@ export const analyticsService = {
       if (__DEV__) {
         console.log('📊 Analytics Event:', { eventName, userId, properties });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error tracking event:', error);
     }
   },

@@ -258,7 +258,7 @@ export const aiService = {
               if (content) {
                 onChunk(content);
               }
-            } catch (e) {
+            } catch (e: unknown) {
               console.error('Error parsing chunk:', e);
             }
           }
