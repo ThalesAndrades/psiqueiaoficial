@@ -193,6 +193,12 @@ eas update --branch production --message "patch: <short note>"
 only to clients running the same `expo.version`. Bump the version
 field whenever you change native code.
 
+GitHub-hosted alternative: `.github/workflows/eas-update.yml`
+(manual dispatch). Choose the branch (preview / production), write
+the changelog line, run — the workflow runs the same lint/typecheck/
+test gate before calling `eas update`. Requires the same `EXPO_TOKEN`
+and `EXPO_PUBLIC_*` repo secrets as the build workflow.
+
 ## 6. Rollback
 
 - iOS: in App Store Connect, take the release down or expedite a new

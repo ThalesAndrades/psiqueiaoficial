@@ -1,0 +1,79 @@
+name: EAS Update (OTA)
+
+# OTA-only patches for JS/asset changes that DON'T touch native code.
+# Native changes need a new binary via eas-build.yml.
+#
+# Triggered manually so OTA is never accidental; the human picks the
+# channel (preview / production) and writes the changelog message.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'EAS Update branch (channel)'
+        required: true
+        type: choice
+        default: preview
+        options: [preview, production]
+      message:
+        description: 'Update message (shows up in `eas update:list`)'
+        required: true
+        type: string
+
+jobs:
+  publish-update:
+    name: eas update (${{ inputs.branch }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projeto
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          package_json_file: projeto/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projeto/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Verify EAS authentication
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN repo secret is not set." >&2
+            exit 1
+          fi
+          eas whoami
+
+      # Same gates as ci.yml. We do NOT want to push a broken JS bundle
+      # to live users via OTA.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Publish OTA update
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        # `--branch` selects the EAS Update channel; clients on the same
+        # runtimeVersion (set by app.json's policy: appVersion) pick up the
+        # bundle on next launch.
+        run: eas update --non-interactive --branch "${{ inputs.branch }}" --message "${{ inputs.message }}"
