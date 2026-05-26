@@ -214,7 +214,37 @@ field whenever you change native code.
 | Crash at startup, no logs | Missing `EXPO_PUBLIC_SUPABASE_URL` | `lib/supabase.ts` throws when those env vars are missing; verify they're set as EAS secrets |
 | Stripe webhook stops firing post-release | Edge Function env var rotated | Re-deploy the function and update STRIPE_WEBHOOK_SECRET in Supabase |
 
-## 8. Useful local commands
+## 8. Building from GitHub Actions (optional)
+
+`.github/workflows/eas-build.yml` exposes a manual-dispatch workflow
+that runs the same lint/typecheck/test gate as CI, then calls
+`eas build` (and optionally `eas submit`) from a clean Ubuntu runner.
+It never runs on push — only when you trigger it from the Actions tab.
+
+Required repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Purpose |
+|---|---|
+| `EXPO_TOKEN` | EAS API token (`eas login` → `eas whoami --json` or [generate one](https://expo.dev/accounts/settings/access-tokens)) |
+| `EXPO_PUBLIC_SUPABASE_URL` | Mirrors the EAS secret of the same name; lets `eas build` surface missing-config errors before the cloud build starts |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as above |
+| `APPLE_ID` | Only used when submitting to App Store |
+| `ASC_APP_ID` | Only used when submitting to App Store |
+| `APPLE_TEAM_ID` | Only used when submitting to App Store |
+
+Trigger flow:
+
+1. Actions tab → **EAS Build & Submit** → Run workflow.
+2. Pick the profile (development / preview / production), the platform,
+   and whether to submit.
+3. Watch the run; the EAS build URL appears in the `eas build` step's
+   logs. Build artifacts live in your EAS dashboard, not in GitHub.
+
+The Android submit JSON service-account file still has to be uploaded
+to EAS via `eas credentials` — it cannot be a GitHub secret because
+EAS reads it from disk at submit time.
+
+## 9. Useful local commands
 
 ```bash
 pnpm start                       # Expo Dev Client
@@ -224,7 +254,7 @@ eas channel:view production      # what OTA bundle is live
 eas update:list --branch production
 ```
 
-## 9. References
+## 10. References
 
 - App Store Connect docs: https://developer.apple.com/help/app-store-connect/
 - Google Play Console: https://support.google.com/googleplay/android-developer
