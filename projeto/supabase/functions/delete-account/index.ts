@@ -84,7 +84,7 @@ serve(async (req) => {
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     if (deleteError) {
-      log.error('Error deleting user', { error: deleteError?.message ?? String(deleteError) });
+      log.error('Error deleting user', { error: deleteError });
       return new Response(
         JSON.stringify({ error: `Erro ao excluir conta: ${deleteError.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -99,7 +99,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    log.error('Edge Function error', { error: error?.message ?? String(error) });
+    log.error('Edge Function error', { error: error });
     return new Response(
       JSON.stringify({ error: error.message || 'Erro ao excluir conta' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

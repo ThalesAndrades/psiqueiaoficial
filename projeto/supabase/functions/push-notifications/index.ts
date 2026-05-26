@@ -290,7 +290,7 @@ serve(async (req) => {
         .eq('id', user.id);
 
       if (error) {
-        log.error('Error storing push token', { error: error?.message ?? String(error) });
+        log.error('Error storing push token', { error: error });
         return new Response(
           JSON.stringify({ error: 'Failed to store push token' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -305,7 +305,7 @@ serve(async (req) => {
 
     return new Response('Invalid action', { status: 400 });
   } catch (error: any) {
-    log.error('Push notification error', { error: error?.message ?? String(error) });
+    log.error('Push notification error', { error: error });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

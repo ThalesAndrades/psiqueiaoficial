@@ -130,7 +130,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    log.error('Unhandled error', { error: error?.message ?? String(error) });
+    log.error('Unhandled error', { error: error });
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

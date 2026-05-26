@@ -113,7 +113,7 @@ serve(async (req) => {
         .single();
 
       if (apptErr || !appointment) {
-        log.error('[Stripe] Appointment lookup failed', { error: apptErr?.message ?? String(apptErr) });
+        log.error('[Stripe] Appointment lookup failed', { error: apptErr });
         return new Response(
           JSON.stringify({ error: 'Appointment not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -201,7 +201,7 @@ serve(async (req) => {
         });
 
         if (dbError) {
-          log.error('[Stripe] Error storing transaction', { error: dbError?.message ?? String(dbError) });
+          log.error('[Stripe] Error storing transaction', { error: dbError });
         }
 
         return new Response(
@@ -212,7 +212,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (stripeError: any) {
-        log.error('[Stripe] Payment intent error', { error: stripeError?.message ?? String(stripeError) });
+        log.error('[Stripe] Payment intent error', { error: stripeError });
         return new Response(
           JSON.stringify({ 
             error: `Stripe error: ${stripeError.message}`,
@@ -342,7 +342,7 @@ serve(async (req) => {
       });
 
       if (dbError) {
-        log.error('[Stripe] Error storing transaction', { error: dbError?.message ?? String(dbError) });
+        log.error('[Stripe] Error storing transaction', { error: dbError });
       }
 
       return new Response(
@@ -377,8 +377,7 @@ serve(async (req) => {
         log.info('[Webhook] Received event', { type: event.type });
       } catch (err: any) {
         log.error('[Webhook] Signature verification failed', {
-          message: err.message,
-          type: err.type,
+          error: err,
           raw: body.substring(0, 100),
         });
         return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -396,7 +395,7 @@ serve(async (req) => {
           .eq('stripe_payment_id', paymentIntent.id);
 
         if (error) {
-          log.error('[Webhook] Error updating transaction', { error: error?.message ?? String(error) });
+          log.error('[Webhook] Error updating transaction', { error: error });
         }
 
         // Update appointment payment status
@@ -420,7 +419,7 @@ serve(async (req) => {
           .eq('stripe_payment_id', session.id);
 
         if (error) {
-          log.error('[Webhook] Error updating transaction', { error: error?.message ?? String(error) });
+          log.error('[Webhook] Error updating transaction', { error: error });
         }
 
         // Update appointment payment status and create Meet link
@@ -453,7 +452,7 @@ serve(async (req) => {
             .eq('id', session.metadata.appointment_id);
 
           if (updateError) {
-            log.error('[Webhook] Error updating appointment', { error: updateError?.message ?? String(updateError) });
+            log.error('[Webhook] Error updating appointment', { error: updateError });
           } else {
             log.info('[Webhook] Appointment confirmed with Meet link', { appointmentId: session.metadata.appointment_id, meetLink });
           }
@@ -725,7 +724,7 @@ serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    log.error('[Stripe] Unexpected error', { error: error?.message ?? String(error) });
+    log.error('[Stripe] Unexpected error', { error: error });
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

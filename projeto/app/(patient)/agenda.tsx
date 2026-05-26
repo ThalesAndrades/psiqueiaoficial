@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -115,12 +115,14 @@ export default function AgendaScreen() {
 
   const handleJoinMeeting = (meetLink: string | null) => {
     if (!meetLink) {
-      toastManager.show({ type: 'info', message: 'Link Indisponível: O link da reunião ainda não foi gerado. Aguarde ou entre em contato com seu psicólogo.' });
+      // Two-clause explainer — blocking Alert so the user reads the
+      // "contact the psychologist" instruction before the UI moves on.
+      Alert.alert('Link Indisponível', 'O link da reunião ainda não foi gerado. Aguarde ou entre em contato com seu psicólogo.');
       return;
     }
     // Detectar placeholder
     if (meetLink.includes('abc-defg-hij')) {
-      toastManager.show({ type: 'info', message: 'Link Temporário: O link real será gerado automaticamente após a confirmação do pagamento.' });
+      Alert.alert('Link Temporário', 'O link real será gerado automaticamente após a confirmação do pagamento.');
       return;
     }
     setSelectedMeeting(meetLink);
@@ -140,7 +142,9 @@ export default function AgendaScreen() {
     if (error) {
       toastManager.show({ type: 'error', message: `Erro ao Sincronizar: ${error}` });
     } else {
-      toastManager.show({ type: 'success', message: `${data?.synced || 0} eventos sincronizados com Google Calendar` });
+      // Blocking Alert — the synced count matters (0 = silent no-op the user
+      // needs to know about), and the list is about to re-render underneath.
+      Alert.alert('Sucesso', `${data?.synced || 0} eventos sincronizados com Google Calendar`);
       await loadAppointments();
     }
     setLoading(false);

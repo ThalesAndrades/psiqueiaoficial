@@ -43,11 +43,21 @@ export interface FinancialStats {
 }
 
 /**
- * Calcula o total de uma lista de transações
+ * Calcula o total de uma lista de transações.
+ *
+ * PostgREST returns `numeric` columns as strings by default, so the row
+ * type is `number | string | null`. The `Number()` coercion below handles
+ * all three. Callers must not assume `t.amount` is a JS number — go
+ * through this helper or coerce at the query boundary.
  */
-function calculateTotal(transactions: { amount: number }[] | null): number {
+type TransactionAmount = { amount: number | string | null };
+
+function calculateTotal(transactions: TransactionAmount[] | null): number {
   if (!transactions || transactions.length === 0) return 0;
-  return transactions.reduce((sum: number, t: { amount: number }) => sum + Number(t.amount || 0), 0);
+  return transactions.reduce(
+    (sum: number, t: TransactionAmount) => sum + (Number(t.amount) || 0),
+    0,
+  );
 }
 
 export const financialService = {
