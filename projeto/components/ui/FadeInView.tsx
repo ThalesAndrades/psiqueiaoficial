@@ -12,7 +12,7 @@ interface FadeInViewProps extends ViewProps {
   duration?: number;
 }
 
-export const FadeInView = React.memo(({ children, delay = 0, duration = 600, style, ...props }: FadeInViewProps) => {
+export const FadeInView = React.memo(function FadeInView({ children, delay = 0, duration = 600, style, ...props }: FadeInViewProps) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
 

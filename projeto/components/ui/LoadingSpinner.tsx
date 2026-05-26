@@ -14,7 +14,7 @@ interface LoadingSpinnerProps {
   color?: string;
 }
 
-export const LoadingSpinner = React.memo(({ size = 40, color = theme.colors.primary }: LoadingSpinnerProps) => {
+export const LoadingSpinner = React.memo(function LoadingSpinner({ size = 40, color = theme.colors.primary }: LoadingSpinnerProps) {
   const rotation = useSharedValue(0);
 
   useEffect(() => {

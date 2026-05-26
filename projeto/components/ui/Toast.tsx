@@ -33,12 +33,12 @@ const COLOR_MAP: Record<ToastType, string> = {
   warning: '#F59E0B',
 };
 
-export const Toast = memo(({ 
-  type, 
-  message, 
-  duration = 3000, 
-  onDismiss 
-}: ToastProps) => {
+export const Toast = memo(function Toast({
+  type,
+  message,
+  duration = 3000,
+  onDismiss,
+}: ToastProps) {
   const translateY = useSharedValue(-100);
   const opacity = useSharedValue(0);
 
@@ -161,7 +161,7 @@ export const toastManager = new ToastManager();
  * Add this to your root layout (_layout.tsx)
  */
 
-export const ToastContainer = memo(() => {
+export const ToastContainer = memo(function ToastContainer() {
   const [config, setConfig] = React.useState<ToastConfig | null>(null);
 
   useEffect(() => {
