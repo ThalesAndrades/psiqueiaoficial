@@ -1,0 +1,55 @@
+{
+  "cli": {
+    "version": ">= 5.9.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle",
+        "gradle": {
+          "buildOptions": {
+            "enableProguardInReleaseBuilds": true,
+            "enableHermes": true
+          }
+        },
+        "uploadProguardMapping": true
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "seu-email-apple@exemplo.com",
+        "ascAppId": "sua-asc-app-id",
+        "appleTeamId": "seu-team-id"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./playstore-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}
