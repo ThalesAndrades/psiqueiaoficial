@@ -18,7 +18,6 @@ import { ActivityPermissionDisclosure } from '../../components/activity/Activity
 import { activityService } from '../../services/activityService';
 import { LoadingSpinner, FadeInView } from '../../components';
 import { useAppData } from '../../hooks/useAppData';
-import { toastManager } from '../../components/ui/Toast';
 
 export default function BemEstarAtivoScreen() {
   const router = useRouter();
@@ -80,10 +79,13 @@ export default function BemEstarAtivoScreen() {
         [{ text: 'OK', onPress: () => loadActivityData() }]
       );
     } else {
-      toastManager.show({
-        type: 'info',
-        message: 'Permissão Negada: Você pode ativar essa permissão a qualquer momento nas configurações do aplicativo.',
-      });
+      // Blocking Alert — matches the granted branch's UX (also Alert) and
+      // makes sure the user sees the "settings of the app" instruction
+      // before navigating away.
+      Alert.alert(
+        'Permissão Negada',
+        'Você pode ativar essa permissão a qualquer momento nas configurações do aplicativo.',
+      );
     }
 
     setLoading(false);
@@ -91,10 +93,10 @@ export default function BemEstarAtivoScreen() {
 
   const handleDeclinePermission = () => {
     setShowDisclosure(false);
-    toastManager.show({
-      type: 'info',
-      message: 'Funcionalidade Desativada: Você pode ativar o Bem-Estar Ativo a qualquer momento através do botão "Ativar".',
-    });
+    Alert.alert(
+      'Funcionalidade Desativada',
+      'Você pode ativar o Bem-Estar Ativo a qualquer momento através do botão "Ativar".',
+    );
   };
 
   const getActivityIcon = (type: string) => {

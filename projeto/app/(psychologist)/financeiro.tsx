@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -91,7 +91,10 @@ export default function FinanceiroScreen() {
   useEffect(() => {
     // Check if returning from Stripe setup
     if (params.setup === 'complete') {
-      toastManager.show({ type: 'success', message: 'Sua conta Stripe foi configurada com sucesso!' });
+      // Blocking confirmation — the user just round-tripped through a
+      // browser; a 3s toast is easy to miss and could lead to repeat
+      // onboarding (and a duplicate Stripe Connect account).
+      Alert.alert('Configuração Concluída', 'Sua conta Stripe foi configurada com sucesso!');
       checkConnectStatus();
       // Clear params
       router.replace('/(psychologist)/financeiro');
