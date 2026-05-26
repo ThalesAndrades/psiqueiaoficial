@@ -21,6 +21,11 @@ export interface PsychologistProfile {
   specializations: string[];
   bio?: string;
   session_price?: number;
+  // Duration of a session in minutes (set in the editar-perfil screen,
+  // defaults to 50). Optional because legacy rows may not have it.
+  session_duration?: number;
+  // Free-text therapeutic approach (TCC, Psicanálise, etc.).
+  approach?: string;
   available_days: string[];
   available_hours: any;
   rating: number;

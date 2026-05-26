@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { theme } from '../../constants/theme';
 import { aiService, diaryService, analyticsService } from '../../services';
+import type { DiaryEntry } from '../../services/diaryService';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppData } from '../../hooks/useAppData';
 import { LoadingSpinner, FadeInView } from '../../components';
@@ -67,7 +68,10 @@ export default function DiarioScreen() {
     setLoading(true);
     const { error } = await diaryService.createDiaryEntry({
       patient_id: userProfile.id,
-      mood: selectedMood || undefined,
+      // Cast: the mood UI only sets ids from the moods[] array, which
+      // already matches the literal union. Keeping the state loose as
+      // string preserves backward-compat with the picker handler.
+      mood: (selectedMood || undefined) as DiaryEntry['mood'],
       emotions: selectedEmotions,
       content: diaryText,
     });

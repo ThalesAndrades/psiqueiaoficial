@@ -7,13 +7,14 @@ import {
   patientPsychologistService,
   diaryService,
 } from '../services';
+import type { FinancialStats, TransactionWithRelations } from '../services/financialService';
 
 interface AppDataContextType {
   // Common
   appointments: any[];
   loading: boolean;
   error: string | null;
-  
+
   // Patient-only data
   patientAppointments: any[];
   nextPatientSession: any | null;
@@ -21,7 +22,10 @@ interface AppDataContextType {
   carePlanProgress: number;
   myPsychologist: any | null;
   diaryEntries: any[];
-  
+  // Alias of diaryEntries kept for screens (bem-estar-ativo) that adopted
+  // the patient-prefixed naming convention.
+  patientDiaryEntries: any[];
+
   // Psychologist-only data
   psychologistAppointments: any[];
   todaySessions: any[];
@@ -29,10 +33,14 @@ interface AppDataContextType {
   activePatients: number;
   monthlyRevenue: number;
   attendanceRate: number;
-  
+  transactions: TransactionWithRelations[];
+  financialStats: FinancialStats | null;
+
   // Actions
   refreshAll: () => Promise<void>;
   refreshAppointments: () => Promise<void>;
+  refreshDiary: () => Promise<void>;
+  refreshFinancials: () => Promise<void>;
 }
 
 const defaultContext: AppDataContextType = {
@@ -45,14 +53,19 @@ const defaultContext: AppDataContextType = {
   carePlanProgress: 0,
   myPsychologist: null,
   diaryEntries: [],
+  patientDiaryEntries: [],
   psychologistAppointments: [],
   todaySessions: [],
   myPatients: [],
   activePatients: 0,
   monthlyRevenue: 0,
   attendanceRate: 100,
+  transactions: [],
+  financialStats: null,
   refreshAll: async () => {},
   refreshAppointments: async () => {},
+  refreshDiary: async () => {},
+  refreshFinancials: async () => {},
 };
 
 export const AppDataContext = createContext<AppDataContextType>(defaultContext);
@@ -72,6 +85,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   // Psychologist-only states
   const [myPatients, setMyPatients] = useState<any[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [transactions, setTransactions] = useState<TransactionWithRelations[]>([]);
+  const [financialStats, setFinancialStats] = useState<FinancialStats | null>(null);
 
   const loadAllData = async () => {
     if (!userProfile?.id || !userProfile?.user_type) {
@@ -145,9 +160,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     if (!userProfile?.id) return;
 
     try {
-      const [patientsResult, statsResult] = await Promise.all([
+      const [patientsResult, statsResult, txResult] = await Promise.all([
         patientPsychologistService.getMyPatients(userProfile.id),
         financialService.getFinancialStats(userProfile.id),
+        financialService.getTransactions(userProfile.id),
       ]);
 
       if (patientsResult.data) {
@@ -155,11 +171,35 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (statsResult.data) {
+        setFinancialStats(statsResult.data);
         setMonthlyRevenue(statsResult.data.monthlyRevenue || 0);
+      }
+
+      if (txResult.data) {
+        setTransactions(txResult.data);
       }
     } catch (err) {
       console.error('[AppDataContext] Psychologist data error:', err);
     }
+  };
+
+  const refreshDiary = async () => {
+    if (!userProfile?.id || userProfile.user_type !== 'patient') return;
+    const { data } = await diaryService.getDiaryEntries(userProfile.id);
+    if (data) setDiaryEntries(data);
+  };
+
+  const refreshFinancials = async () => {
+    if (!userProfile?.id || userProfile.user_type !== 'psychologist') return;
+    const [statsResult, txResult] = await Promise.all([
+      financialService.getFinancialStats(userProfile.id),
+      financialService.getTransactions(userProfile.id),
+    ]);
+    if (statsResult.data) {
+      setFinancialStats(statsResult.data);
+      setMonthlyRevenue(statsResult.data.monthlyRevenue || 0);
+    }
+    if (txResult.data) setTransactions(txResult.data);
   };
 
   useEffect(() => {
@@ -235,6 +275,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     ? Math.round((appointments.filter(a => a.status === 'completed').length / totalScheduled) * 100)
     : 100;
 
+  const exposedDiary = isPatient ? diaryEntries : [];
+
   const value: AppDataContextType = {
     appointments,
     loading,
@@ -245,7 +287,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     activeTreatmentPlan,
     carePlanProgress,
     myPsychologist,
-    diaryEntries: isPatient ? diaryEntries : [], // Only expose diary to patients
+    diaryEntries: exposedDiary, // Only expose diary to patients
+    patientDiaryEntries: exposedDiary,
     // Psychologist data
     psychologistAppointments,
     todaySessions,
@@ -253,9 +296,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     activePatients,
     monthlyRevenue,
     attendanceRate,
+    transactions: isPsychologist ? transactions : [],
+    financialStats: isPsychologist ? financialStats : null,
     // Actions
     refreshAll: loadAllData,
     refreshAppointments,
+    refreshDiary,
+    refreshFinancials,
   };
 
   return (
