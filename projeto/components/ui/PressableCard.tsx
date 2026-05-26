@@ -8,7 +8,7 @@ import Animated, {
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-export const PressableCard = React.memo(({ children, style, ...props }: TouchableOpacityProps) => {
+export const PressableCard = React.memo(function PressableCard({ children, style, ...props }: TouchableOpacityProps) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({

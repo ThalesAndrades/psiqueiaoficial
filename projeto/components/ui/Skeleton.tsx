@@ -17,12 +17,12 @@ interface SkeletonProps {
   style?: any;
 }
 
-export const Skeleton = memo(({ 
-  width = '100%', 
-  height = 20, 
+export const Skeleton = memo(function Skeleton({
+  width = '100%',
+  height = 20,
   borderRadius = 8,
-  style 
-}: SkeletonProps) => {
+  style,
+}: SkeletonProps) {
   const opacity = useSharedValue(0.3);
 
   React.useEffect(() => {
@@ -61,7 +61,7 @@ interface SkeletonCardProps {
   linesCount?: number;
 }
 
-export const SkeletonCard = memo(({ showAvatar = false, linesCount = 3 }: SkeletonCardProps) => {
+export const SkeletonCard = memo(function SkeletonCard({ showAvatar = false, linesCount = 3 }: SkeletonCardProps) {
   return (
     <View style={styles.card}>
       {showAvatar && (
@@ -86,7 +86,7 @@ interface SkeletonListProps {
   showAvatar?: boolean;
 }
 
-export const SkeletonList = memo(({ count = 5, showAvatar = true }: SkeletonListProps) => {
+export const SkeletonList = memo(function SkeletonList({ count = 5, showAvatar = true }: SkeletonListProps) {
   return (
     <View style={styles.list}>
       {Array.from({ length: count }).map((_, index) => (

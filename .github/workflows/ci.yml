@@ -34,19 +34,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 9 lint errors at the time CI was introduced (mostly react/display-name
-      # on memoized components). Allow-fail until those are cleaned up so the
-      # signal we actually care about — new regressions — is still visible.
       - name: Lint
         run: pnpm lint
-        continue-on-error: true
 
-      # 9 strict-mode errors at the time CI was introduced (AppDataContext
-      # shape mismatches and PsychologistProfile schema). Allow-fail until
-      # the domain decisions are made; the step still surfaces new failures.
       - name: Typecheck
         run: pnpm typecheck
-        continue-on-error: true
 
       # Jest auto-detects CI from the CI env var that GitHub Actions sets,
       # so no extra flag needed.
