@@ -32,9 +32,10 @@ function serializeError(err: unknown): Record<string, unknown> | string {
     // Pick up SDK-specific fields (Stripe's code/decline_code/request_id,
     // Supabase PostgrestError's code/details/hint, etc.) without overwriting
     // the canonical name/message/stack above.
-    for (const key of Object.keys(err)) {
+    const errAsRecord = err as unknown as Record<string, unknown>;
+    for (const key of Object.keys(errAsRecord)) {
       if (key === 'name' || key === 'message' || key === 'stack') continue;
-      out[key] = (err as Record<string, unknown>)[key];
+      out[key] = errAsRecord[key];
     }
     return out;
   }
