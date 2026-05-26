@@ -335,7 +335,7 @@ serve(async (req) => {
         }
       } catch (error: any) {
         lastError = error;
-        log.error('[Email] Attempt error', { attempt, error: error?.message ?? String(error) });
+        log.error('[Email] Attempt error', { attempt, error: error });
 
         if (attempt < MAX_RETRIES) {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
@@ -344,13 +344,13 @@ serve(async (req) => {
     }
 
     // All retries failed
-    log.error('[Email] All attempts failed', { error: lastError?.message ?? String(lastError) });
+    log.error('[Email] All attempts failed', { error: lastError });
     return new Response(
       JSON.stringify({ error: lastError.message || 'Failed to send email after retries' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    log.error('[Email] Unexpected error', { error: error?.message ?? String(error) });
+    log.error('[Email] Unexpected error', { error: error });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

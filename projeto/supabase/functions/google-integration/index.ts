@@ -50,42 +50,42 @@ serve(async (req) => {
         throw new Error('Missing OAuth code');
       }
 
-      try {
-        log.info('[OAuth] Exchanging code for tokens');
-        
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code,
-            client_id: GOOGLE_CLIENT_ID,
-            client_secret: GOOGLE_CLIENT_SECRET,
-            redirect_uri: `${req.headers.get('origin') || 'http://localhost:3000'}/oauth/consent`,
-            grant_type: 'authorization_code',
-          }),
-        });
+      // No inner try/catch — the outer catch at the bottom of serve() logs
+      // every OAuth failure once with full context, so re-logging here would
+      // just produce duplicate entries with no extra signal.
+      log.info('[OAuth] Exchanging code for tokens');
 
-        if (!tokenResponse.ok) {
-          const errorData = await tokenResponse.text();
-          log.error('[OAuth] Token exchange error', { error: errorData });
-          throw new Error(`Failed to exchange code: ${errorData}`);
-        }
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          client_id: GOOGLE_CLIENT_ID,
+          client_secret: GOOGLE_CLIENT_SECRET,
+          redirect_uri: `${req.headers.get('origin') || 'http://localhost:3000'}/oauth/consent`,
+          grant_type: 'authorization_code',
+        }),
+      });
 
-        const tokens = await tokenResponse.json();
-        log.info('[OAuth] Tokens obtained successfully for user', { userId: user.id });
-
-        // TODO: Store refresh_token securely for long-term access
-        // For now, returning success without storing tokens
-        // In production, store in encrypted user_metadata or separate table
-
-        return new Response(
-          JSON.stringify({ success: true }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (error: any) {
-        log.error('[OAuth] Error', { error: error?.message ?? String(error) });
-        throw error;
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.text();
+        // Log the upstream Google response body before throwing — this is the
+        // only place that has access to it.
+        log.error('[OAuth] Token exchange error', { error: errorData });
+        throw new Error(`Failed to exchange code: ${errorData}`);
       }
+
+      const tokens = await tokenResponse.json();
+      log.info('[OAuth] Tokens obtained successfully for user', { userId: user.id });
+
+      // TODO: Store refresh_token securely for long-term access
+      // For now, returning success without storing tokens
+      // In production, store in encrypted user_metadata or separate table
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     let result;
@@ -113,7 +113,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    log.error('[Google Integration] Error', { error: error?.message ?? String(error) });
+    log.error('[Google Integration] Error', { error: error });
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       {
@@ -150,7 +150,7 @@ async function createGoogleMeeting(
       .eq('id', appointmentData.appointmentId);
 
     if (updateError) {
-      log.error('[Meet] Failed to update appointment', { error: updateError?.message ?? String(updateError) });
+      log.error('[Meet] Failed to update appointment', { error: updateError });
       throw new Error(`Failed to update appointment: ${updateError.message}`);
     }
 
@@ -162,7 +162,7 @@ async function createGoogleMeeting(
       note: 'Open in browser to create or join a meeting',
     };
   } catch (error: any) {
-    log.error('[Meet] Error', { error: error?.message ?? String(error) });
+    log.error('[Meet] Error', { error: error });
     throw error;
   }
 }
@@ -204,7 +204,7 @@ async function syncGoogleCalendar(
       appointments: appointments,
     };
   } catch (error: any) {
-    log.error('[Calendar] Error', { error: error?.message ?? String(error) });
+    log.error('[Calendar] Error', { error: error });
     throw error;
   }
 }
