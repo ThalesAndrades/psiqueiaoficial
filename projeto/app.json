@@ -8,10 +8,20 @@
     "scheme": "psiqueia",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "primaryColor": "#6B46C1",
+    "assetBundlePatterns": ["assets/**/*"],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#6B46C1"
+    },
+    "notification": {
+      "icon": "./assets/images/logo.png",
+      "color": "#6B46C1",
+      "iosDisplayInForeground": true
     },
     "ios": {
       "supportsTablet": true,
@@ -20,9 +30,13 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Este app precisa acessar a câmera para permitir que você tire fotos de perfil e envie documentos.",
         "NSPhotoLibraryUsageDescription": "Este app precisa acessar suas fotos para permitir que você escolha uma foto de perfil.",
+        "NSPhotoLibraryAddUsageDescription": "Este app salva documentos exportados na sua biblioteca de fotos.",
         "NSMicrophoneUsageDescription": "Este app precisa acessar o microfone para chamadas de vídeo durante as sessões de terapia.",
         "NSCalendarsUsageDescription": "Este app precisa acessar seu calendário para agendar e sincronizar suas sessões de terapia.",
         "NSRemindersUsageDescription": "Este app precisa acessar lembretes para notificá-lo sobre suas próximas sessões.",
+        "NSMotionUsageDescription": "Este app usa dados de movimento para correlacionar atividade física e bem-estar emocional.",
+        "NSFaceIDUsageDescription": "Use Face ID para acessar suas anotações e sessões com mais segurança.",
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"]
       },
       "associatedDomains": [
@@ -39,12 +53,15 @@
       },
       "permissions": [
         "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
         "RECORD_AUDIO",
         "READ_CALENDAR",
         "WRITE_CALENDAR",
-        "ACTIVITY_RECOGNITION"
+        "ACTIVITY_RECOGNITION",
+        "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "edgeToEdgeEnabled": true
     },
@@ -80,7 +97,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "REPLACE_WITH_REAL_EAS_PROJECT_ID"
+        "projectId": "00000000-0000-0000-0000-000000000000"
       }
     }
   }

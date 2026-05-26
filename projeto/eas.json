@@ -1,11 +1,15 @@
 {
   "cli": {
-    "version": ">= 5.9.0"
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote",
+    "requireCommit": true
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
+      "resourceClass": "default",
       "android": {
         "buildType": "apk"
       },
@@ -15,6 +19,8 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
+      "resourceClass": "default",
       "android": {
         "buildType": "apk"
       },
@@ -24,6 +30,8 @@
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
+      "resourceClass": "medium",
       "android": {
         "buildType": "app-bundle",
         "gradle": {
@@ -42,13 +50,26 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "seu-email-apple@exemplo.com",
-        "ascAppId": "sua-asc-app-id",
-        "appleTeamId": "seu-team-id"
+        "appleId": "$APPLE_ID",
+        "ascAppId": "$ASC_APP_ID",
+        "appleTeamId": "$APPLE_TEAM_ID"
       },
       "android": {
         "serviceAccountKeyPath": "./playstore-service-account.json",
-        "track": "internal"
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    },
+    "preview": {
+      "ios": {
+        "appleId": "$APPLE_ID",
+        "ascAppId": "$ASC_APP_ID",
+        "appleTeamId": "$APPLE_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./playstore-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }

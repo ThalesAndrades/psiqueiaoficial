@@ -1,0 +1,30 @@
+# Files excluded from the tarball uploaded to EAS Build.
+# Keeps the upload small and avoids shipping unrelated artifacts.
+
+# Tests + harness
+__tests__/
+jest.config.*
+*.test.ts
+*.test.tsx
+
+# Docs (kept in repo, not needed at build time)
+docs/
+CHANGELOG.md
+POLITICA_DE_PRIVACIDADE.md
+TERMOS_DE_USO.md
+support-page.md
+privacy-policy.md
+
+# Local artifacts
+*.zip
+*.tgz
+.expo/
+dist/
+build/
+
+# Local secrets — never upload
+playstore-service-account.json
+.env
+.env.local
+.env.*.local
+apple-asc-key-*.p8
