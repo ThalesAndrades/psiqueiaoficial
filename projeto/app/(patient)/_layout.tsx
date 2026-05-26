@@ -11,34 +11,23 @@ export default function PatientLayout() {
   const router = useRouter();
   const { userProfile, loading } = useAuth();
 
+  const wrongUserType = !!userProfile && userProfile.user_type !== 'patient';
+
+  // Navigation is a side effect — move it out of the render path. Render-time
+  // router.replace() races with parent re-renders and can ping-pong between
+  // patient/psychologist layouts when refreshProfile briefly nulls userProfile.
   useEffect(() => {
-    if (loading) return;
+    if (wrongUserType) {
+      router.replace('/(psychologist)');
+    }
+  }, [wrongUserType, router]);
 
-    // Only check user, not userProfile (profile loads in background)
-    // userProfile check happens in render below
-  }, [loading]);
-
-  if (loading) {
+  if (loading || !userProfile || wrongUserType) {
     return (
       <View style={styles.loadingContainer}>
         <LoadingSpinner size={40} color={theme.colors.primary} />
       </View>
     );
-  }
-
-  // If profile not loaded yet, show loading (will load in background)
-  if (!userProfile) {
-    return (
-      <View style={styles.loadingContainer}>
-        <LoadingSpinner size={40} color={theme.colors.primary} />
-      </View>
-    );
-  }
-
-  // Wrong user type - redirect to correct dashboard
-  if (userProfile.user_type !== 'patient') {
-    router.replace('/(psychologist)');
-    return null;
   }
 
   return (

@@ -84,7 +84,7 @@ export const authService = {
   async signInWithGoogle() {
     try {
       const redirectUrl = AuthSession.makeRedirectUri({
-        scheme: 'onspaceapp',
+        scheme: 'psiqueia',
         path: 'auth',
       });
 
@@ -172,7 +172,7 @@ export const authService = {
 
       // Android/Web: Use OAuth flow
       const redirectUrl = AuthSession.makeRedirectUri({
-        scheme: 'onspaceapp',
+        scheme: 'psiqueia',
         path: 'auth',
       });
 
@@ -214,8 +214,8 @@ export const authService = {
     try {
       // Use a more reliable redirect URL format
       const redirectUrl = Platform.select({
-        ios: 'onspaceapp://auth/reset-password',
-        android: 'onspaceapp://auth/reset-password',
+        ios: 'psiqueia://auth/reset-password',
+        android: 'psiqueia://auth/reset-password',
         default: `${window.location.origin}/auth/reset-password`,
       });
 
@@ -271,9 +271,11 @@ export const authService = {
     return { data: data.session, error: null };
   },
 
-  async deleteAccount() {
+  async deleteAccount(password: string) {
     try {
-      const { data, error } = await supabase.functions.invoke('delete-account');
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: { password },
+      });
 
       if (error) {
         let errorMessage = 'Erro ao excluir conta';

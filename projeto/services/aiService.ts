@@ -191,11 +191,12 @@ export const aiService = {
   },
 
   async streamChat(
-    message: string, 
+    message: string,
     context: any,
     onChunk: (chunk: string) => void,
     onComplete: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    signal?: AbortSignal,
   ): Promise<void> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -215,9 +216,9 @@ export const aiService = {
           type: 'chat',
           message,
           context,
-          userId: session.user.id,
           stream: true,
         } as AIRequest),
+        signal,
       });
 
       if (!response.ok) {
@@ -266,6 +267,7 @@ export const aiService = {
 
       onComplete();
     } catch (error: any) {
+      if (error?.name === 'AbortError') return; // caller cancelled
       console.error('Stream chat error:', error);
       onError(error.message || 'Erro ao processar chat');
     }

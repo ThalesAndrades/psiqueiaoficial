@@ -46,7 +46,17 @@ export function AIChat({
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  
+  const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+    };
+  }, []);
+
   // Animated values for loading dots
   const dot1Anim = useRef(new Animated.Value(0.3)).current;
   const dot2Anim = useRef(new Animated.Value(0.3)).current;
@@ -127,19 +137,26 @@ export function AIChat({
     setIsStreaming(true);
     setStreamingMessage('');
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       // Use streaming for better UX
       aiService.streamChat(
         userMessage.content,
         initialContext,
         (chunk) => {
+          if (!mountedRef.current) return;
           setStreamingMessage(prev => prev + chunk);
         },
         () => {
+          if (!mountedRef.current) return;
           setIsLoading(false);
           // Typing effect will handle message completion
         },
         (error) => {
+          if (!mountedRef.current) return;
           console.error('Chat error:', error);
           const errorMessage: Message = {
             id: (Date.now() + 1).toString(),
@@ -151,10 +168,12 @@ export function AIChat({
           setStreamingMessage('');
           setIsStreaming(false);
           setIsLoading(false);
-        }
+        },
+        controller.signal,
       );
     } catch (error) {
       console.error('Send message error:', error);
+      if (!mountedRef.current) return;
       setIsLoading(false);
       setIsStreaming(false);
       setStreamingMessage('');
