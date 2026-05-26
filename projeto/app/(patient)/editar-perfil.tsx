@@ -82,7 +82,7 @@ export default function EditarPerfilPatientScreen() {
       const { error: userError } = await profileService.updateUserProfile(userProfile.id, {
         full_name: profile.full_name.trim(),
         phone: profile.phone.trim(),
-        birth_date: profile.birth_date || null,
+        birth_date: profile.birth_date || undefined,
       });
 
       if (userError) {

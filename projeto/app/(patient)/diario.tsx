@@ -65,7 +65,7 @@ export default function DiarioScreen() {
     }
     
     setLoading(true);
-    const { error } = await diaryService.createEntry({
+    const { error } = await diaryService.createDiaryEntry({
       patient_id: userProfile.id,
       mood: selectedMood || undefined,
       emotions: selectedEmotions,

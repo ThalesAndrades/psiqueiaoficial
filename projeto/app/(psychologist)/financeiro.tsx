@@ -365,7 +365,7 @@ export default function FinanceiroScreen() {
             </View>
 
             <View style={styles.transactionsList}>
-              {transactions.map((transaction) => (
+              {transactions.map((transaction: any) => (
                 <View key={transaction.id} style={styles.transactionCard}>
                   <View style={styles.transactionLeft}>
                     <View

@@ -15,7 +15,6 @@ export * from './paymentService';
 export * from './invitationService';
 export * from './loggerService';
 export * from './healthService';
-export * from './mockDataService';
 export * from './documentService';
 export * from './auditService';
 export * from './activityService';

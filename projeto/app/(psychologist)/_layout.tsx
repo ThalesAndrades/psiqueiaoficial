@@ -49,7 +49,7 @@ export default function PsychologistLayout() {
         tabBar={(props) => (
           <AnimatedTabBar 
             {...props} 
-            visibleTabs={PSYCHOLOGIST_TABS} 
+            visibleTabs={[...PSYCHOLOGIST_TABS]}
           />
         )}
       >

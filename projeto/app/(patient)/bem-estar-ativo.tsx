@@ -228,7 +228,7 @@ export default function BemEstarAtivoScreen() {
                   <View style={styles.correlationContent}>
                     <View style={styles.activityInfo}>
                       <MaterialCommunityIcons
-                        name={getActivityIcon(item.activityType)}
+                        name={getActivityIcon(item.activityType) as any}
                         size={32}
                         color={theme.colors.primary}
                       />
