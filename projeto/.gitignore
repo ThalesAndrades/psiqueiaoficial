@@ -37,6 +37,12 @@ yarn-error.*
 .env.*
 !.env.example
 
+# Store-submit credentials — NUNCA commitar
+playstore-service-account.json
+google-play-service-account.json
+*-asc-key-*.p8
+AuthKey_*.p8
+
 # typescript
 *.tsbuildinfo
 
