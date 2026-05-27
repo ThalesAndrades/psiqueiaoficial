@@ -41,6 +41,12 @@ function getPostHog(): PostHog | null {
 /**
  * Capture an event from anywhere in the app. Safe when the SDK is
  * disabled (empty API key) — silently no-ops.
+ *
+ * `properties` is intentionally loose (`Record<string, unknown>`) for
+ * callers; PostHog's own type is the tighter `PostHogEventProperties`
+ * (JSON-serializable values only). Callers are expected to pass JSON-safe
+ * values — we cast at the SDK boundary instead of constraining every
+ * caller.
  */
 export function captureEvent(
   eventName: string,
@@ -49,7 +55,7 @@ export function captureEvent(
   const ph = getPostHog();
   if (!ph) return;
   try {
-    ph.capture(eventName, properties);
+    ph.capture(eventName, properties as Record<string, never>);
   } catch (err) {
     if (__DEV__) console.warn('[posthog] capture failed:', err);
   }
@@ -68,7 +74,9 @@ export function identifyUser(
     if (userId === null) {
       ph.reset();
     } else {
-      ph.identify(userId, traits);
+      // Cast for the same reason as captureEvent above — traits must be
+      // JSON-serializable but we keep the public API loose.
+      ph.identify(userId, traits as Record<string, never>);
     }
   } catch (err) {
     if (__DEV__) console.warn('[posthog] identify failed:', err);

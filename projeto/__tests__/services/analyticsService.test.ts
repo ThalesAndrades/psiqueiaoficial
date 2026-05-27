@@ -15,8 +15,8 @@ jest.mock('../../lib/posthog', () => ({
   captureEvent: (...args: any[]) => captureEventMock(...args),
 }));
 
-const insertMock = jest.fn(() => Promise.resolve({ data: null, error: null }));
-const fromMock = jest.fn(() => ({ insert: insertMock }));
+const insertMock = jest.fn((..._args: unknown[]) => Promise.resolve({ data: null, error: null }));
+const fromMock = jest.fn((..._args: unknown[]) => ({ insert: insertMock }));
 
 jest.mock('../../lib/supabase', () => ({
   supabase: { from: (...args: any[]) => fromMock(...args) },
@@ -47,7 +47,7 @@ describe('analyticsService.trackEvent', () => {
     await analyticsService.trackEvent('foo_event', 'user-123', { extra: 'bar' });
     expect(fromMock).toHaveBeenCalledWith('analytics_events');
     expect(insertMock).toHaveBeenCalledTimes(1);
-    const row = insertMock.mock.calls[0][0];
+    const row = insertMock.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(row).toMatchObject({
       event_name: 'foo_event',
       user_id: 'user-123',
