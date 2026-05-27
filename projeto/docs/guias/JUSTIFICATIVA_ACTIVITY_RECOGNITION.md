@@ -164,5 +164,5 @@ cat extracted/AndroidManifest.xml | grep ACTIVITY_RECOGNITION
 Em caso de dúvidas sobre esta declaração, entre em contato:
 
 **Email:** contato@psiqueia.com  
-**Desenvolvedor:** OnSpace AI Platform  
+**Desenvolvedor:** PsiquèIA  
 **Data de Atualização:** 19/12/2025

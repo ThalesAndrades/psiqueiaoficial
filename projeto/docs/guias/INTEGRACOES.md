@@ -357,8 +357,8 @@ As seguintes chaves devem ser configuradas no Supabase Edge Functions:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `ONSPACE_AI_API_KEY`
-- `ONSPACE_AI_BASE_URL`
+- `ANTHROPIC_API_KEY` (substitui `ONSPACE_AI_*` — chama `api.anthropic.com/v1/messages`)
+- `ANTHROPIC_MODEL` (opcional; default `claude-opus-4-7`)
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_API_KEY`
 

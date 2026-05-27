@@ -93,15 +93,16 @@ RESEND_API_KEY=re_... (obtido em resend.com/api-keys)
 
 ---
 
-### 5. 🤖 OnSpace AI (Já Configurado)
+### 5. 🤖 Anthropic Claude (Substitui OnSpace AI)
 
-**Status:** ✅ JÁ FUNCIONAL
+**Status:** ⚠️ Requer configurar `ANTHROPIC_API_KEY` (anteriormente `ONSPACE_AI_*`)
 
-- ✅ `ONSPACE_AI_API_KEY` configurada
-- ✅ `ONSPACE_AI_BASE_URL` configurada
-- ✅ Edge Function `ai-agent` pronta
-- ✅ Serviço `aiService.ts` implementado
-- ✅ Usado em: Chat AI, Análise de Humor, Insights
+- 🔑 Crie a chave em https://console.anthropic.com/settings/keys
+- 🔑 Configure como secret no Supabase: `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`
+- ⚙️ Opcional: `ANTHROPIC_MODEL=claude-sonnet-4-6` para reduzir custo (default = `claude-opus-4-7`)
+- ✅ Edge Function `ai-agent` já migrada (chama `api.anthropic.com/v1/messages` direto)
+- ✅ Serviço `aiService.ts` no client não precisa de mudança (mesma assinatura)
+- ✅ Usado em: Chat AI, Análise de Humor, Insights, Sugestões de tratamento
 
 **Nenhuma ação necessária!**
 

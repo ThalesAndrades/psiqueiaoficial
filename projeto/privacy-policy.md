@@ -224,10 +224,10 @@ Todos os parceiros aderem a cláusulas contratuais padrão da LGPD/GDPR.
 ## 11. Inteligência Artificial
 
 ### 11.1 Insights de Diário
-- Usamos IA (OpenAI GPT/Google Gemini) para analisar entradas de diário
-- Dados são enviados criptografados via API
-- Processamento é realizado em servidores da OnSpace AI
-- Não treinamos modelos com seus dados pessoais
+- Usamos IA (modelos Claude da Anthropic) para analisar entradas de diário
+- Dados são enviados criptografados via HTTPS para `api.anthropic.com`
+- Anthropic processa as requisições conforme sua política de privacidade (https://www.anthropic.com/legal/privacy)
+- Não treinamos modelos com seus dados pessoais (a Anthropic não usa dados de API para treinamento por padrão)
 
 ### 11.2 Chat com IA
 - Conversas são armazenadas para histórico

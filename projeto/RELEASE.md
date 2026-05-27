@@ -86,8 +86,8 @@ list with comments; the table below is the at-a-glance summary.
 | `STRIPE_WEBHOOK_SECRET` | stripe-payment | from Stripe Dashboard → Webhooks → Signing secret |
 | `PLATFORM_FEE_PERCENT` | stripe-payment | defaults to `10` if unset |
 | `RESEND_API_KEY` | send-email | `re_…` |
-| `ONSPACE_AI_API_KEY` | ai-agent | LLM gateway key |
-| `ONSPACE_AI_BASE_URL` | ai-agent | usually `https://api.onspace.…` |
+| `ANTHROPIC_API_KEY` | ai-agent | Anthropic Console → Settings → Keys (`sk-ant-…`) |
+| `ANTHROPIC_MODEL` | ai-agent | optional; default `claude-opus-4-7`; set to `claude-sonnet-4-6` to reduce cost |
 | `GOOGLE_CLIENT_ID` | google-integration | OAuth client id |
 | `GOOGLE_CLIENT_SECRET` | google-integration | OAuth client secret |
 | `DAILY_API_KEY` | daily-rooms, stripe-payment (via invoke) | Daily.co REST API key — create at https://dashboard.daily.co/developers |
