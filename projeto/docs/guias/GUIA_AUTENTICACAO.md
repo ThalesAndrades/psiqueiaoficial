@@ -590,7 +590,7 @@ analyticsService.track('user_login', {
    - Tente novamente
 
 **Contato:**
-- Email: contact@onspace.ai
+- Email: contato@psiqueia.com
 - Documentação: Ver arquivos `.md` no projeto
 
 ---
