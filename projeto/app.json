@@ -36,6 +36,8 @@
         "NSCalendarsUsageDescription": "Este app precisa acessar seu calendário para agendar e sincronizar suas sessões de terapia.",
         "NSRemindersUsageDescription": "Este app precisa acessar lembretes para notificá-lo sobre suas próximas sessões.",
         "NSMotionUsageDescription": "Este app usa dados de movimento para correlacionar atividade física e bem-estar emocional.",
+        "NSHealthShareUsageDescription": "PsiquèIA usa dados de atividade (passos, batimentos, sono) com seu consentimento para correlacionar com seu bem-estar emocional. Você pode revogar acesso a qualquer momento em Ajustes.",
+        "NSHealthUpdateUsageDescription": "PsiquèIA não grava dados no HealthKit; esta entrada é exigida pelos frameworks nativos quando o app declara intenção de leitura de saúde.",
         "NSFaceIDUsageDescription": "Use Face ID para acessar suas anotações e sessões com mais segurança.",
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"]
@@ -57,7 +59,10 @@
         "READ_CALENDAR",
         "WRITE_CALENDAR",
         "ACTIVITY_RECOGNITION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_HEART_RATE"
       ],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",

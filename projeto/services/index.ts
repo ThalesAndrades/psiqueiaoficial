@@ -18,3 +18,4 @@ export * from './healthService';
 export * from './documentService';
 export * from './auditService';
 export * from './activityService';
+export * from './videoService';

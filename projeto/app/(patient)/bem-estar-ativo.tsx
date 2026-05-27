@@ -65,12 +65,13 @@ export default function BemEstarAtivoScreen() {
     }
   };
 
-  const handleAcceptPermission = async () => {
+  // The disclosure component now invokes `activityService.requestPermission()`
+  // itself and passes us the resulting `granted` boolean. This keeps the
+  // Play Store-required "disclosure first, OS prompt second" flow co-located
+  // inside the disclosure component.
+  const handleAcceptPermission = async (granted: boolean) => {
     setShowDisclosure(false);
-    setLoading(true);
 
-    const granted = await activityService.requestPermission();
-    
     if (granted) {
       setHasPermission(true);
       Alert.alert(
@@ -87,8 +88,6 @@ export default function BemEstarAtivoScreen() {
         'Você pode ativar essa permissão a qualquer momento nas configurações do aplicativo.',
       );
     }
-
-    setLoading(false);
   };
 
   const handleDeclinePermission = () => {

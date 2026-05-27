@@ -13,7 +13,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { AppDataProvider } from '../contexts/AppDataContext';
 import { useAuth } from '../hooks/useAuth';
-import { pushNotificationService, appointmentService, googleService } from '../services';
+import { pushNotificationService, appointmentService, videoService } from '../services';
 import { ToastContainer, ErrorBoundary } from '../components';
 import { toastManager } from '../components/ui/Toast';
 import { queryClient } from '../lib/queryClient';
@@ -67,26 +67,20 @@ function RootLayoutContent() {
               status: 'confirmed',
             });
 
-            // Tentar criar o link do Google Meet
+            // Tentar provisionar a sala Daily.co via Edge Function. O webhook
+            // do Stripe já dispara esse mesmo fluxo server-side, então essa
+            // chamada é um best-effort para cobrir o caso de o deep link
+            // chegar antes do webhook (ou se ele falhar). A função
+            // `daily-rooms` é idempotente — chamadas repetidas reusam a
+            // sala existente.
             try {
               const { data: appointment } = await appointmentService.getAppointmentById(appointmentId);
-
               if (appointment && !appointment.meet_link) {
-                const { data: meetLink } = await googleService.createMeetLink(
-                  appointment.scheduled_at,
-                  appointment.duration_minutes || 50,
-                  `Sessão de Terapia - PsiquèIA`
-                );
-
-                if (meetLink) {
-                  await appointmentService.updateAppointment(appointmentId, {
-                    meet_link: meetLink,
-                  });
-                }
+                await videoService.createRoom(appointmentId);
               }
             } catch (meetError) {
-              console.error('Error creating Meet link:', meetError);
-              // Não bloquear o fluxo se falhar a criação do Meet
+              console.error('Error provisioning video room:', meetError);
+              // Não bloquear o fluxo se a sala falhar — usuário pode gerar manualmente na tela da sessão
             }
 
             // Mostrar mensagem de sucesso

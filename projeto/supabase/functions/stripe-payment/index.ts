@@ -423,43 +423,51 @@ serve(async (req) => {
         }
 
         // Update appointment payment status and (only on first delivery)
-        // create the Meet link. Stripe retries duplicate webhooks for ~3 hours;
-        // we must NOT overwrite an existing link on retry or the patient and
-        // psychologist receive a new URL each time and the one already sent
-        // out by email/push goes dead.
+        // create the video room. Stripe retries duplicate webhooks for ~3
+        // hours; we must NOT overwrite an existing link on retry or the
+        // patient and psychologist receive a new URL each time and the
+        // one already sent out by email/push goes dead.
+        //
+        // The room itself is created in the `daily-rooms` Edge Function so
+        // all Daily.co interaction stays server-side. We invoke it with the
+        // service-role client (the webhook is not an authenticated user).
         if (session.metadata?.appointment_id) {
+          const appointmentId = session.metadata.appointment_id;
           const { data: appointment } = await supabaseAdmin
             .from('appointments')
             .select('google_meet_link, meet_link')
-            .eq('id', session.metadata.appointment_id)
+            .eq('id', appointmentId)
             .single();
 
           const alreadyHasLink = Boolean(appointment?.google_meet_link || appointment?.meet_link);
 
-          let update: Record<string, unknown> = {
-            payment_status: 'paid',
-            status: 'confirmed',
-          };
-
-          if (!alreadyHasLink) {
-            const meetId = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
-            const meetLink = `https://meet.google.com/${meetId.substring(0, 3)}-${meetId.substring(3, 7)}-${meetId.substring(7, 11)}`;
-            update.google_meet_link = meetLink;
-            update.meet_link = meetLink;
-          }
-
           const { error: updateError } = await supabaseAdmin
             .from('appointments')
-            .update(update)
-            .eq('id', session.metadata.appointment_id);
+            .update({ payment_status: 'paid', status: 'confirmed' })
+            .eq('id', appointmentId);
 
           if (updateError) {
             log.error('[Webhook] Error updating appointment', { error: updateError });
+          }
+
+          if (!alreadyHasLink) {
+            try {
+              const { data: roomData, error: roomError } = await supabaseAdmin.functions.invoke('daily-rooms', {
+                body: { action: 'create', appointmentId },
+              });
+              if (roomError) {
+                log.error('[Webhook] daily-rooms invoke failed', { error: roomError, appointmentId });
+              } else {
+                log.info('[Webhook] Daily room provisioned', { appointmentId, url: roomData?.url });
+              }
+            } catch (roomErr) {
+              // Daily-rooms is best-effort here — if it fails the patient can
+              // still tap "Gerar sala" on the session screen. Don't 500 the
+              // webhook or Stripe will keep retrying.
+              log.error('[Webhook] daily-rooms invoke threw', { error: roomErr, appointmentId });
+            }
           } else {
-            log.info('[Webhook] Appointment confirmed', {
-              appointmentId: session.metadata.appointment_id,
-              regeneratedMeetLink: !alreadyHasLink,
-            });
+            log.info('[Webhook] Appointment already had video link, skipping room create', { appointmentId });
           }
         }
       }

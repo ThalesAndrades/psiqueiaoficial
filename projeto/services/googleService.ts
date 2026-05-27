@@ -201,53 +201,12 @@ export const googleService = {
     }
   },
 
-  /**
-   * Create a simple Google Meet link (without full calendar integration)
-   * This is a fallback when full Google integration is not available
-   */
-  async createMeetLink(
-    scheduledAt: string,
-    durationMinutes: number,
-    title: string
-  ): Promise<{ data: string | null; error: string | null }> {
-    try {
-      // Tentar criar via Edge Function
-      const { data, error } = await supabase.functions.invoke('google-integration', {
-        body: {
-          // The Edge Function dispatches on `create_meeting`; the legacy
-          // 'create_meet_link' name went to the "Unknown action" branch and
-          // 500'd silently before falling back to the placeholder below.
-          action: 'create_meeting',
-          data: {
-            scheduledAt,
-            durationMinutes,
-            title,
-          },
-        },
-      });
-
-      if (error) {
-        // Se falhar, gerar um link de placeholder que será atualizado posteriormente
-        console.warn('Could not create Meet link via API, using placeholder:', error);
-        
-        // Gerar um ID único para o link de placeholder
-        const meetId = Math.random().toString(36).substring(2, 15);
-        const placeholderLink = `https://meet.google.com/${meetId.substring(0, 3)}-${meetId.substring(3, 7)}-${meetId.substring(7, 10)}`;
-        
-        return { data: placeholderLink, error: null };
-      }
-
-      return { data: data?.meetLink || data, error: null };
-    } catch (error: any) {
-      console.error('Create Meet link error:', error);
-      
-      // Fallback: gerar link de placeholder
-      const meetId = Math.random().toString(36).substring(2, 15);
-      const placeholderLink = `https://meet.google.com/${meetId.substring(0, 3)}-${meetId.substring(3, 7)}-${meetId.substring(7, 10)}`;
-      
-      return { data: placeholderLink, error: null };
-    }
-  },
+  // NOTE: `createMeetLink` was removed in the Daily.co migration. Video
+  // rooms are now created by the `daily-rooms` Edge Function and exposed
+  // via `services/videoService.ts`. The Stripe webhook calls daily-rooms
+  // automatically on `checkout.session.completed`, and the session screen
+  // (`app/session/[appointmentId].tsx`) calls it on demand via
+  // `videoService.createRoom(appointmentId)`.
 
   /**
    * Get shared documents for current user

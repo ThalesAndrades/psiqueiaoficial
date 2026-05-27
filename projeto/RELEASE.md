@@ -90,6 +90,7 @@ list with comments; the table below is the at-a-glance summary.
 | `ONSPACE_AI_BASE_URL` | ai-agent | usually `https://api.onspace.…` |
 | `GOOGLE_CLIENT_ID` | google-integration | OAuth client id |
 | `GOOGLE_CLIENT_SECRET` | google-integration | OAuth client secret |
+| `DAILY_API_KEY` | daily-rooms, stripe-payment (via invoke) | Daily.co REST API key — create at https://dashboard.daily.co/developers |
 | `ALLOWED_ORIGINS` | _shared/cors | comma-separated; if unset uses built-in list (`psiqueia.com`, `www.psiqueia.com`, `app.psiqueia.com`, localhost) — verify those domains are correct for your deployment |
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are
@@ -290,6 +291,40 @@ eas build:view <id>              # detailed status + logs
 eas channel:view production      # what OTA bundle is live
 eas update:list --branch production
 ```
+
+## 9.1 Pix nativo (futuro)
+
+> Status: **follow-up, revisar pós-MVP**. Não fazer agora.
+
+Hoje o Pix está habilitado dentro do **Stripe Brasil** — taxa em torno de
+**~5%** sobre o valor da sessão (cartão + Pix usam o mesmo pipeline). Isso é
+aceitável no MVP porque mantém um único gateway, um único reconciliador, e
+um único fluxo de Connect para os psicólogos.
+
+**Quando reavaliar:** se o volume mensal passar de **~R$ 100k/mês em Pix**,
+a economia compensa o esforço de migrar.
+
+**Alternativas com Pix mais barato:**
+- **Mercado Pago Brasil** — Pix em torno de **0,99%**, integração razoável,
+  suporta split (equivalente ao Connect).
+- **Pagar.me / Stone** — taxas similares, melhor SLA enterprise.
+
+**Caminho de migração (resumo):**
+1. Manter o Stripe Connect apenas para cartão internacional / recorrência.
+2. Adicionar nova Edge Function `mercadopago-pix/` (mesmo padrão de
+   `stripe-payment/`: ações + webhook handler, secrets `MP_ACCESS_TOKEN` /
+   `MP_WEBHOOK_SECRET`).
+3. No app: `paymentService` ganha um parâmetro `gateway: 'stripe' | 'mercadopago'`
+   ou roteia pelo método (`pix` → MP, `card` → Stripe) — escolha a fazer
+   no design.
+4. Webhook unificado em `appointments`: o status `paid` chega pelo gateway
+   correspondente; ambos atualizam o mesmo registro de `financial_transactions`
+   com uma nova coluna `gateway`.
+5. Pré-requisito de compliance: revisar PCI escopo e KYC/onboarding do MP
+   para psicólogos pessoa-física (CPF) e jurídica (CNPJ).
+
+Nada disso é bloqueante para a primeira release — abrir issue / RFC quando
+o ticket médio × volume justificar.
 
 ## 10. References
 

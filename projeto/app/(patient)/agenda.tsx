@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -10,7 +9,7 @@ import { theme } from '../../constants/theme';
 import { useAppData } from '../../hooks/useAppData';
 import { useAuth } from '../../hooks/useAuth';
 import { analyticsService } from '../../services';
-import { LoadingSpinner, FadeInView, GoogleMeetViewer } from '../../components';
+import { LoadingSpinner, FadeInView } from '../../components';
 import { googleService } from '../../services/googleService';
 import { toastManager } from '../../components/ui/Toast';
 
@@ -24,7 +23,6 @@ export default function AgendaScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [currentWeek, setCurrentWeek] = useState<Date[]>([]);
-  const [selectedMeeting, setSelectedMeeting] = useState<string | null>(null);
 
   useEffect(() => {
     generateWeek();
@@ -113,19 +111,11 @@ export default function AgendaScreen() {
     return labels[status] || status;
   };
 
-  const handleJoinMeeting = (meetLink: string | null) => {
-    if (!meetLink) {
-      // Two-clause explainer — blocking Alert so the user reads the
-      // "contact the psychologist" instruction before the UI moves on.
-      Alert.alert('Link Indisponível', 'O link da reunião ainda não foi gerado. Aguarde ou entre em contato com seu psicólogo.');
-      return;
-    }
-    // Detectar placeholder
-    if (meetLink.includes('abc-defg-hij')) {
-      Alert.alert('Link Temporário', 'O link real será gerado automaticamente após a confirmação do pagamento.');
-      return;
-    }
-    setSelectedMeeting(meetLink);
+  const handleJoinMeeting = (appointmentId: string) => {
+    // Video sessions live in their own route now (Daily.co prefab). The
+    // session screen handles room creation on demand if it isn't there
+    // yet, so we don't need to gate on meet_link presence here.
+    router.push(`/session/${appointmentId}` as any);
   };
 
   const handleSyncCalendar = async () => {
@@ -259,14 +249,13 @@ export default function AgendaScreen() {
                         </Text>
                       </View>
 
-                      {appointment.google_meet_link && (
-                        <TouchableOpacity
-                          style={styles.meetButton}
-                          onPress={() => handleJoinMeeting(appointment.google_meet_link)}
-                        >
-                          <Ionicons name="videocam" size={20} color="#FFFFFF" />
-                        </TouchableOpacity>
-                      )}
+                      <TouchableOpacity
+                        style={styles.meetButton}
+                        onPress={() => handleJoinMeeting(appointment.id)}
+                        accessibilityLabel="Entrar na sessão de vídeo"
+                      >
+                        <Ionicons name="videocam" size={20} color="#FFFFFF" />
+                      </TouchableOpacity>
                     </View>
 
                     {appointment.patient_notes && (
@@ -304,23 +293,6 @@ export default function AgendaScreen() {
           removeClippedSubviews={true}
         />
       </LinearGradient>
-
-      {/* Google Meet Modal */}
-      <Modal
-        visible={!!selectedMeeting}
-        animationType="slide"
-        onRequestClose={() => setSelectedMeeting(null)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalHeader, { paddingTop: Math.max(insets.top, 16) }]}>
-            <Text style={styles.modalTitle}>Sessão ao Vivo</Text>
-            <TouchableOpacity onPress={() => setSelectedMeeting(null)} style={styles.closeButton}>
-              <Ionicons name="close" size={28} color={theme.colors.foreground} />
-            </TouchableOpacity>
-          </View>
-          {selectedMeeting && <GoogleMeetViewer meetLink={selectedMeeting} />}
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -559,26 +531,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#64748B',
     lineHeight: 18,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.foreground,
-  },
-  closeButton: {
-    padding: 8,
   },
 });
