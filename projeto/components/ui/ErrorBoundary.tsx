@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { theme } from '../../constants/theme';
 import { logger } from '../../services/loggerService';
+import { captureException as sentryCaptureException } from '../../lib/sentry';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -43,14 +44,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error
+    // Log error locally first so the structured log line is captured even
+    // if the Sentry SDK is disabled / offline.
     logger.error('ErrorBoundary', error.message, {
       stack: error.stack,
       componentStack: errorInfo.componentStack,
     });
 
-    // Send to error tracking service
-    // Sentry.captureException(error, { extra: errorInfo });
+    // Forward to Sentry. The helper no-ops when EXPO_PUBLIC_SENTRY_DSN is
+    // unset, so this is safe in dev and CI.
+    sentryCaptureException(error, {
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   resetError = () => {
