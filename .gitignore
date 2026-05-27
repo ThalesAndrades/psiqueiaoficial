@@ -1,0 +1,7 @@
+# Per-agent worktrees created by Claude Code's Agent tool with
+# isolation: "worktree". These are sandboxed copies of the repo and
+# must never be committed.
+.claude/
+
+# Macros/scratch
+.DS_Store
