@@ -97,7 +97,8 @@
           "sounds": [],
           "mode": "production"
         }
-      ]
+      ],
+      "@sentry/react-native/expo"
     ],
     "experiments": {
       "typedRoutes": true

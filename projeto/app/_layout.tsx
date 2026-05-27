@@ -1,13 +1,25 @@
+// Sentry must be initialised before any React component mounts so that
+// errors thrown during the very first render are captured. Keep this
+// import + call at the top of the file.
+import { initSentry, Sentry } from '../lib/sentry';
+initSentry();
+
 import { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { Linking, Alert } from 'react-native';
 import * as ExpoLinking from 'expo-linking';
+import { PostHogProvider } from 'posthog-react-native';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { AppDataProvider } from '../contexts/AppDataContext';
 import { useAuth } from '../hooks/useAuth';
 import { pushNotificationService, appointmentService, googleService } from '../services';
 import { ToastContainer, ErrorBoundary } from '../components';
 import { toastManager } from '../components/ui/Toast';
+import { queryClient } from '../lib/queryClient';
+
+const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '';
+const POSTHOG_HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
 
 function RootLayoutContent() {
   const router = useRouter();
@@ -25,7 +37,7 @@ function RootLayoutContent() {
     const responseListener = pushNotificationService.addNotificationResponseListener((response) => {
       const { screen, ...params } = response.notification.request.content.data as any;
       console.log('Notification tapped:', { screen, params });
-      
+
       // Navegar para a tela apropriada baseado na notificação
       if (screen === 'appointment' && params.appointmentId) {
         router.push('/(patient)/agenda');
@@ -39,14 +51,14 @@ function RootLayoutContent() {
     // Handle deep links
     const handleDeepLink = async ({ url }: { url: string }) => {
       console.log('Deep link received:', url);
-      
+
       const urlObj = ExpoLinking.parse(url);
       const { path, queryParams } = urlObj;
-      
+
       // Handle payment success deep link
       if (url.includes('payment-success') || path?.includes('payment-success')) {
         const appointmentId = queryParams?.appointmentId as string;
-        
+
         if (appointmentId) {
           try {
             // Atualizar status do pagamento para 'paid'
@@ -58,14 +70,14 @@ function RootLayoutContent() {
             // Tentar criar o link do Google Meet
             try {
               const { data: appointment } = await appointmentService.getAppointmentById(appointmentId);
-              
+
               if (appointment && !appointment.meet_link) {
                 const { data: meetLink } = await googleService.createMeetLink(
                   appointment.scheduled_at,
                   appointment.duration_minutes || 50,
                   `Sessão de Terapia - PsiquèIA`
                 );
-                
+
                 if (meetLink) {
                   await appointmentService.updateAppointment(appointmentId, {
                     meet_link: meetLink,
@@ -102,7 +114,7 @@ function RootLayoutContent() {
       // Handle payment cancel deep link
       if (url.includes('payment-cancel') || path?.includes('payment-cancel')) {
         const appointmentId = queryParams?.appointmentId as string;
-        
+
         toastManager.show({
           type: 'info',
           message: 'Pagamento cancelado. Você pode tentar novamente.',
@@ -117,7 +129,7 @@ function RootLayoutContent() {
         }
         return;
       }
-      
+
       // Handle reset password deep link
       if (url.includes('reset-password') || url.includes('type=recovery')) {
         console.log('Password reset link:', urlObj);
@@ -149,13 +161,13 @@ function RootLayoutContent() {
       <Stack.Screen name="login" />
       <Stack.Screen name="cadastro" />
       <Stack.Screen name="esqueci-senha" />
-      <Stack.Screen 
-        name="auth/reset-password" 
-        options={{ 
+      <Stack.Screen
+        name="auth/reset-password"
+        options={{
           presentation: 'modal',
           headerShown: true,
           title: 'Redefinir Senha'
-        }} 
+        }}
       />
       <Stack.Screen name="(onboarding-patient)" />
       <Stack.Screen name="(onboarding-psychologist)" />
@@ -165,15 +177,43 @@ function RootLayoutContent() {
   );
 }
 
-export default function RootLayout() {
+/**
+ * Provider tree (outer → inner):
+ *   Sentry.wrap → PostHogProvider → ErrorBoundary → AuthProvider →
+ *   AppDataProvider → QueryClientProvider → RootLayoutContent
+ *
+ * Sentry wraps the entire tree (via `Sentry.wrap`) so it can capture
+ * uncaught errors regardless of where they happen. PostHog sits above
+ * ErrorBoundary so analytics keeps working even after a render error.
+ * ErrorBoundary is above the auth/data providers so a context failure
+ * still shows the fallback UI.
+ *
+ * QueryClientProvider is placed inside AppDataProvider intentionally:
+ * the legacy context still owns most data loading; the query client is
+ * additive and ready for incremental adoption.
+ */
+function RootLayout() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <AppDataProvider>
-          <RootLayoutContent />
-          <ToastContainer />
-        </AppDataProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <PostHogProvider
+      apiKey={POSTHOG_API_KEY}
+      options={{ host: POSTHOG_HOST }}
+      autocapture
+    >
+      <ErrorBoundary>
+        <AuthProvider>
+          <AppDataProvider>
+            <QueryClientProvider client={queryClient}>
+              <RootLayoutContent />
+              <ToastContainer />
+            </QueryClientProvider>
+          </AppDataProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </PostHogProvider>
   );
 }
+
+// Wrap with Sentry so the SDK can hook into navigation/perf instrumentation.
+// `Sentry.wrap` is a no-op passthrough when the SDK was initialised with
+// `enabled: false` (empty DSN).
+export default Sentry.wrap(RootLayout);
