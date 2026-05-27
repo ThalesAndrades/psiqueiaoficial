@@ -18,6 +18,9 @@ export interface PsychologistProfile {
   id: string;
   user_id: string;
   crp: string;
+  // Número do registro CFP no formato "UF/NNNNNN" (ex.: "06/123456"). Opcional
+  // porque psicólogos cadastrados antes do campo existir ainda têm a coluna nula.
+  cfp_number?: string;
   specializations: string[];
   bio?: string;
   session_price?: number;

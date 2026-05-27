@@ -59,29 +59,10 @@ serve(async (req) => {
       );
     }
 
-    // Gate signup behind a server-side invitation check. Without this the
-    // function is an open relay for creating confirmed accounts of any role.
-    const { data: invitation, error: invitationError } = await supabaseAdmin.rpc('validate_invitation', {
-      p_code: invitationCode,
-      p_email: email,
-    });
-
-    if (invitationError || !invitation?.valid) {
-      log.warn('Invitation rejected', { email, userType, reason: invitation?.error || invitationError?.message });
-      return new Response(
-        JSON.stringify({ error: invitation?.error || 'Convite inválido ou expirado' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (invitation.user_type && invitation.user_type !== userType) {
-      return new Response(
-        JSON.stringify({ error: 'O tipo de usuário não corresponde ao convite' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Create user using Admin API
+    // Create user using Admin API. Order: we create the auth row first so
+    // that consume_invitation() can record the user_id of the consumer in
+    // the same transaction. If consume_invitation() then fails (already
+    // used, wrong email, etc.) we roll back the auth row below.
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -98,9 +79,9 @@ serve(async (req) => {
       log.error('Failed to create user', { error: createError.message, code: (createError as any)?.code });
       return new Response(
         JSON.stringify({ error: createError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -113,16 +94,45 @@ serve(async (req) => {
     }
 
     // Profiles are created automatically by the handle_new_user trigger
-    // No need to create them manually here
+    // No need to create them manually here.
 
-    // Burn the invitation so it cannot be reused.
-    await supabaseAdmin.rpc('mark_invitation_used', {
+    // Atomically validate + burn the invitation. consume_invitation locks
+    // the invitation row with SELECT ... FOR UPDATE, so two concurrent
+    // signups racing on the same code cannot both succeed.
+    const { data: consumeResult, error: consumeError } = await supabaseAdmin.rpc('consume_invitation', {
       p_code: invitationCode,
+      p_email: email,
+      p_user_type: userType,
       p_user_id: userData.user.id,
     });
 
+    if (consumeError || !consumeResult?.valid) {
+      const reason = consumeResult?.error || consumeError?.message || 'Convite inválido ou expirado';
+      log.warn('Invitation rejected after user creation; rolling back', {
+        email,
+        userType,
+        userId: userData.user.id,
+        reason,
+      });
+
+      // Best-effort cleanup of the orphaned auth row. We log but do not
+      // bubble up a delete failure — the user got a 403 either way.
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
+      if (deleteError) {
+        log.error('Failed to delete orphaned auth user after invitation rejection', {
+          userId: userData.user.id,
+          error: deleteError.message,
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ error: reason }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         user: { id: userData.user.id, email: userData.user.email },
         message: 'User created. Profile will be ready in 1-2 seconds.'
