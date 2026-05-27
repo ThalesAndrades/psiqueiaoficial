@@ -26,6 +26,7 @@
     ]
   },
   "dependencies": {
+    "@daily-co/react-native-daily-js": "^0.66.0",
     "@expo-google-fonts/inter": "^0.4.1",
     "@expo/metro-runtime": "5.0.4",
     "@expo/vector-icons": "^14.0.0",
@@ -100,6 +101,8 @@
     "react-native": "0.79.3",
     "react-native-edge-to-edge": "1.6.0",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-health": "^1.19.0",
+    "react-native-health-connect": "^3.3.0",
     "react-native-reanimated": "3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
