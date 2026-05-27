@@ -3,9 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { theme } from '../../constants/theme';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAppData } from '../../hooks/useAppData';
 import { LoadingSpinner } from '../../components';
 
@@ -30,6 +31,7 @@ const generateCurrentWeek = () => {
 };
 
 export default function AgendaScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { psychologistAppointments, refreshAppointments } = useAppData();
   const [loading, setLoading] = useState(false);
@@ -224,7 +226,11 @@ export default function AgendaScreen() {
                     </Text>
                   </View>
 
-                  <TouchableOpacity style={styles.videoButton}>
+                  <TouchableOpacity
+                    style={styles.videoButton}
+                    onPress={() => router.push(`/session/${appointment.id}` as any)}
+                    accessibilityLabel="Entrar na sessão de vídeo"
+                  >
                     <Ionicons name="videocam" size={20} color={theme.colors.primary} />
                   </TouchableOpacity>
                 </View>
