@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import { activityService } from '../../services/activityService';
 
 interface ActivityPermissionDisclosureProps {
-  onAccept: () => void;
+  /**
+   * Called with the result of the native permission prompt. The component
+   * calls `activityService.requestPermission()` internally and only
+   * surfaces the granted boolean to the caller — this keeps the
+   * Play-Store-required disclosure flow (disclosure → user taps "Ativar"
+   * → OS prompt) entirely inside this component.
+   */
+  onAccept: (granted: boolean) => void;
   onDecline: () => void;
 }
 
@@ -18,6 +27,18 @@ export function ActivityPermissionDisclosure({
   onAccept,
   onDecline,
 }: ActivityPermissionDisclosureProps) {
+  const [requesting, setRequesting] = useState(false);
+
+  const handleAccept = async () => {
+    if (requesting) return;
+    setRequesting(true);
+    try {
+      const granted = await activityService.requestPermission();
+      onAccept(granted);
+    } finally {
+      setRequesting(false);
+    }
+  };
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -96,9 +117,14 @@ export function ActivityPermissionDisclosure({
 
         <TouchableOpacity
           style={[styles.button, styles.acceptButton]}
-          onPress={onAccept}
+          onPress={handleAccept}
+          disabled={requesting}
         >
-          <Text style={styles.acceptButtonText}>Ativar Agora</Text>
+          {requesting ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.acceptButtonText}>Ativar Agora</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
