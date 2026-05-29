@@ -337,3 +337,33 @@ o ticket médio × volume justificar.
   - `docs/guias/GUIA_FINAL_LANCAMENTO.md`
   - `docs/guias/CONFIGURACAO_OAUTH.md`
   - `docs/guias/JUSTIFICATIVA_ACTIVITY_RECOGNITION.md`
+
+---
+
+## Rollback & idempotência das migrações
+
+### Idempotência (verificada)
+As três migrações em `supabase/migrations/` aplicam **2x sem erro** contra um
+banco existente (provado via Management API — HTTP 201 em ambas as passagens):
+- Tabelas: `create table if not exists`
+- Funções/RPCs: `create or replace function`
+- Índices: `create index if not exists`
+- Políticas RLS: cada `create policy` é precedida de `drop policy if exists`
+- Trigger `on_auth_user_created`: precedida de `drop trigger if exists`
+
+Reaplicar a sequência recria as políticas de forma idêntica, sem impacto em dados.
+
+### Rollback
+- **Código:** cada etapa foi entregue em PR isolado — reverter = `git revert` do
+  merge correspondente (#14 schema/RLS, #15 observabilidade, #16 vídeo/health,
+  #18 IA Claude).
+- **Migrações:** não há `down` automático. Para reverter o schema em produção,
+  use um banco com backup PITR (Supabase mantém point-in-time recovery) e
+  restaure para o timestamp anterior à aplicação. Para reverter apenas as
+  políticas RLS, reaplicar a versão anterior do arquivo (as políticas têm
+  `drop ... if exists`, então a substituição é limpa).
+- **Edge Functions:** `supabase functions deploy <nome>` com a versão anterior,
+  ou via Dashboard (cada deploy é versionado — rollback para a versão N-1).
+- **Feature flags de runtime:** Sentry/PostHog/Daily/Anthropic degradam com
+  elegância quando a env var/secret correspondente está ausente (no-op), então
+  "desligar" uma integração = remover o secret e redeployar.
