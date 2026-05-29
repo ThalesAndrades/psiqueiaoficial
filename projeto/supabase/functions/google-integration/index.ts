@@ -55,6 +55,17 @@ serve(async (req) => {
       // just produce duplicate entries with no extra signal.
       log.info('[OAuth] Exchanging code for tokens');
 
+      // SECURITY: redirect_uri vem de env var server-side, NUNCA do header
+      // Origin (controlado pelo cliente). Deve casar exatamente com o
+      // registrado no Google Console.
+      const googleRedirectUri = Deno.env.get('GOOGLE_OAUTH_REDIRECT_URI');
+      if (!googleRedirectUri) {
+        log.error('[OAuth] GOOGLE_OAUTH_REDIRECT_URI not configured');
+        return new Response(
+          JSON.stringify({ error: 'OAuth redirect URI not configured' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,7 +73,7 @@ serve(async (req) => {
           code,
           client_id: GOOGLE_CLIENT_ID,
           client_secret: GOOGLE_CLIENT_SECRET,
-          redirect_uri: `${req.headers.get('origin') || 'http://localhost:3000'}/oauth/consent`,
+          redirect_uri: googleRedirectUri,
           grant_type: 'authorization_code',
         }),
       });

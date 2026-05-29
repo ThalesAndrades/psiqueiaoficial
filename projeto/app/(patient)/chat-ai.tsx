@@ -40,7 +40,13 @@ export default function AIChatScreen() {
       
       <AIChat
         placeholder="Digite sua mensagem..."
-        welcomeMessage="Olá! Sou a PsiquèIA, sua assistente de bem-estar emocional. Estou aqui para apoiar você entre as sessões, oferecer insights sobre seu progresso e ajudar com técnicas de autocuidado. Como posso ajudar você hoje?"
+        welcomeMessage={
+          'Olá! Sou a PsiquèIA, sua assistente de bem-estar emocional. ' +
+          'Estou aqui para apoiar você entre as sessões e ajudar com técnicas de autocuidado.\n\n' +
+          '⚠️ Eu NÃO substituo o atendimento do seu psicólogo. ' +
+          'Em crise ou pensamentos suicidas, ligue 188 (CVV — 24h, gratuito) ou procure o CAPS / pronto-socorro. ' +
+          'Em emergência imediata, ligue 192 (SAMU).'
+        }
       />
     </View>
   );

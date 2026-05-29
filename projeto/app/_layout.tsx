@@ -13,7 +13,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { AppDataProvider } from '../contexts/AppDataContext';
 import { useAuth } from '../hooks/useAuth';
-import { pushNotificationService, appointmentService, videoService } from '../services';
+import { pushNotificationService } from '../services';
 import { ToastContainer, ErrorBoundary } from '../components';
 import { toastManager } from '../components/ui/Toast';
 import { queryClient } from '../lib/queryClient';
@@ -55,53 +55,22 @@ function RootLayoutContent() {
       const urlObj = ExpoLinking.parse(url);
       const { path, queryParams } = urlObj;
 
-      // Handle payment success deep link
+      // Handle payment success deep link.
+      //
+      // SECURITY: o deep link NUNCA grava payment_status='paid' no banco.
+      // A fonte da verdade do pagamento é o webhook do Stripe (Edge Function
+      // stripe-payment, ação 'webhook') que valida a assinatura, fonte do
+      // valor (appointments.session_price), e parties. Marcar 'paid' aqui
+      // permitia ao próprio paciente burlar o pagamento abrindo
+      // `psiqueia://payment-success?appointmentId=<id>` sem passar pelo
+      // checkout. Aqui só mostramos UX positiva e navegamos — o webhook
+      // resolve o estado.
       if (url.includes('payment-success') || path?.includes('payment-success')) {
-        const appointmentId = queryParams?.appointmentId as string;
-
-        if (appointmentId) {
-          try {
-            // Atualizar status do pagamento para 'paid'
-            await appointmentService.updateAppointment(appointmentId, {
-              payment_status: 'paid',
-              status: 'confirmed',
-            });
-
-            // Tentar provisionar a sala Daily.co via Edge Function. O webhook
-            // do Stripe já dispara esse mesmo fluxo server-side, então essa
-            // chamada é um best-effort para cobrir o caso de o deep link
-            // chegar antes do webhook (ou se ele falhar). A função
-            // `daily-rooms` é idempotente — chamadas repetidas reusam a
-            // sala existente.
-            try {
-              const { data: appointment } = await appointmentService.getAppointmentById(appointmentId);
-              if (appointment && !appointment.meet_link) {
-                await videoService.createRoom(appointmentId);
-              }
-            } catch (meetError) {
-              console.error('Error provisioning video room:', meetError);
-              // Não bloquear o fluxo se a sala falhar — usuário pode gerar manualmente na tela da sessão
-            }
-
-            // Mostrar mensagem de sucesso
-            toastManager.show({
-              type: 'success',
-              message: 'Pagamento confirmado! Sua sessão foi agendada.',
-            });
-
-            // Navegar para a agenda
-            router.replace('/(patient)/agenda');
-          } catch (error) {
-            console.error('Error processing payment success:', error);
-            Alert.alert(
-              'Pagamento Processado',
-              'Seu pagamento foi processado. Verifique sua agenda para confirmar o agendamento.',
-              [{ text: 'OK', onPress: () => router.replace('/(patient)/agenda') }]
-            );
-          }
-        } else {
-          router.replace('/(patient)/agenda');
-        }
+        toastManager.show({
+          type: 'success',
+          message: 'Pagamento recebido! Aguarde a confirmação na sua agenda.',
+        });
+        router.replace('/(patient)/agenda');
         return;
       }
 

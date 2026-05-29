@@ -25,6 +25,14 @@ class LoggerService {
       console.log(`[${context}] ${message}`, data || '');
     }
   }
+
+  // Alias dev-only para detalhes verbosos (auth, profile fetch, deep links).
+  // Em produção isto é no-op para não vazar PII em React Native dev logs.
+  debug(context: string, message: string, data?: unknown) {
+    if (this.isDevelopment) {
+      console.log(`[${context}] ${message}`, data ?? '');
+    }
+  }
 }
 
 export const logger = new LoggerService();
