@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
+// Status enums alinhados com os CHECK constraints do schema SQL em
+// supabase/migrations/20260101000000_initial_schema.sql:136-141. Manter em
+// sincronia — divergência quebra Zod.parse() em leituras válidas.
 export const AppointmentStatusSchema = z.enum([
+  'pending',
   'scheduled',
   'confirmed',
   'completed',
@@ -8,7 +12,7 @@ export const AppointmentStatusSchema = z.enum([
   'no_show',
 ]);
 
-export const PaymentStatusSchema = z.enum(['pending', 'paid', 'refunded']);
+export const PaymentStatusSchema = z.enum(['unpaid', 'pending', 'paid', 'refunded']);
 
 export const AppointmentSchema = z.object({
   id: z.string().uuid(),

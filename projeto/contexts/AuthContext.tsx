@@ -4,6 +4,9 @@ import { AppState } from 'react-native';
 import { authService } from '../services/authService';
 import { profileService, UserProfile } from '../services/profileService';
 import { supabase } from '../lib/supabase';
+import { logger } from '../services/loggerService';
+import { identifyUser } from '../lib/posthog';
+import { Sentry } from '../lib/sentry';
 
 export type UserType = 'patient' | 'psychologist' | null;
 
@@ -36,9 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userId: string, 
     retries = 3
   ): Promise<{ success: boolean; error?: string }> => {
-    console.log(`[AuthContext] ====== FETCHING PROFILE ======`);
-    console.log(`[AuthContext] UserId: ${userId}`);
-    console.log(`[AuthContext] Retries left: ${retries}`);
+    logger.debug('AuthContext', 'Fetching profile', { retries });
     
     try {
       const { data, error } = await profileService.getUserProfile(userId);
@@ -61,11 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Perfil não encontrado' };
       }
       
-      console.log('[AuthContext] ✅ Profile loaded successfully!');
-      console.log('[AuthContext] User Type:', data.user_type);
-      console.log('[AuthContext] Email:', data.email);
-      console.log('[AuthContext] Onboarding:', data.onboarding_completed);
-      console.log('[AuthContext] ============================');
+      logger.debug('AuthContext', 'Profile loaded');
+      
+      
+      
+      
       setUserProfile(data);
       return { success: true };
     } catch (err: any) {
@@ -102,6 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setUser(null);
         setUserProfile(null);
+        // Reseta identidade nos provedores de telemetria/erros para o
+        // próximo usuário no mesmo device não herdar a sessão anterior.
+        identifyUser(null);
+        Sentry.setUser(null);
         return;
       }
 
@@ -114,6 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           await fetchProfile(newSession.user.id);
+          // Identifica o usuário no PostHog/Sentry. NÃO enviamos email/PII
+          // como trait — apenas o id e o user_type (categoria de uso).
+          identifyUser(newSession.user.id);
+          Sentry.setUser({ id: newSession.user.id });
         }
       }
     });
@@ -136,8 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    console.log('[AuthContext] ========== SIGN IN START ==========');
-    console.log('[AuthContext] Email:', email);
+    logger.debug('AuthContext', 'Sign in start');
+    
     
     try {
       const { data, error } = await authService.signIn({ email, password });
@@ -153,10 +162,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: 'Erro ao autenticar' };
       }
 
-      console.log('[AuthContext] ✅ Auth successful!');
-      console.log('[AuthContext] User ID:', data.user.id);
-      console.log('[AuthContext] User Email:', data.user.email);
-      console.log('[AuthContext] Now loading profile...');
+      logger.debug('AuthContext', 'Auth successful');
+      
+      
+      
       setUser(data.user);
       setSession(data.session);
       
@@ -186,8 +195,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
       
-      console.log('[AuthContext] ✅ SIGN IN COMPLETE WITH PROFILE');
-      console.log('[AuthContext] =====================================');
+      logger.debug('AuthContext', 'Sign in complete');
+      
       setLoading(false);
       return { error: null };
     } catch (err: any) {
@@ -206,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone?: string
   ) => {
     setLoading(true);
-    console.log('[AuthContext] Starting sign up for:', email, 'type:', type);
+    logger.debug('AuthContext', 'Sign up start', { type });
 
     try {
       const { data, error } = await authService.signUp({
@@ -229,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: 'Erro ao criar conta' };
       }
 
-      console.log('[AuthContext] Sign up successful, loading profile...');
+      logger.debug('AuthContext', 'Sign up successful');
       setUser(data.user);
       setSession(data.session);
       
@@ -254,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
       
-      console.log('[AuthContext] Sign up complete with profile');
+      logger.debug('AuthContext', 'Sign up complete');
       setLoading(false);
       return { error: null };
     } catch (err: any) {
@@ -283,7 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (!user) return;
-    console.log('[AuthContext] Refreshing profile...');
+    logger.debug('AuthContext', 'Refreshing profile');
     await fetchProfile(user.id);
   };
 

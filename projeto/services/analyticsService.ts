@@ -176,25 +176,16 @@ export const analyticsService = {
     userId?: string,
     startDate?: string,
     endDate?: string
-  ): Promise<{ data: any[] | null; error: string | null }> {
+  ): Promise<{ data: Array<{ event_name: string; event_count: number; last_seen: string }> | null; error: string | null }> {
     try {
-      let query = supabase
-        .from('analytics_events')
-        .select('event_name, count(*)', { count: 'exact' });
-
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
-
-      if (startDate) {
-        query = query.gte('timestamp', startDate);
-      }
-
-      if (endDate) {
-        query = query.lte('timestamp', endDate);
-      }
-
-      const { data, error } = await query;
+      // PostgREST não suporta `select('event_name, count(*)')` como
+      // agregação direta; usamos a RPC analytics_events_summary criada na
+      // migration 20260601000000_phantom_tables.sql.
+      const { data, error } = await supabase.rpc('analytics_events_summary', {
+        p_user_id: userId ?? null,
+        p_start_date: startDate ?? null,
+        p_end_date: endDate ?? null,
+      });
 
       if (error) {
         console.error('Error getting analytics summary:', error);

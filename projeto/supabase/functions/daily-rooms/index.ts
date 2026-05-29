@@ -166,16 +166,19 @@ serve(async (req) => {
       const exp = Math.floor(expMs / 1000);
 
       const roomName = roomNameForAppointment(appointmentId);
+      // Salas privadas: a URL crua não basta para entrar — exigimos um
+      // meeting token por participante (gerado abaixo). Combinado com
+      // max_participants:2, isso impede que vazamento da URL exponha a
+      // sessão clínica a um terceiro.
       const body = {
         name: roomName,
-        privacy: 'public',
+        privacy: 'private',
         properties: {
           exp,
           eject_at_room_exp: true,
           enable_chat: true,
           enable_screenshare: true,
-          // Limit to 2 to make tampering with the URL useless — even if
-          // someone shares the link, the third joiner is rejected.
+          enable_knocking: false,
           max_participants: 2,
         },
       };
@@ -219,7 +222,39 @@ serve(async (req) => {
         );
       }
 
-      // Persist into BOTH columns — legacy callers still read google_meet_link.
+      // Mint a meeting token escopado ao chamador (paciente ou psicólogo).
+      // Sem token, a URL sozinha não dá acesso à sala privada. Validade do
+      // token = mesmo `exp` da sala.
+      const callerUserId = isServiceRoleCall
+        ? appointment.patient_id // service role provisiona para o paciente; o psicólogo gera o seu na entrada
+        : (authHeader.replace('Bearer ', '') ? (await supabase.auth.getUser()).data.user?.id : undefined);
+      const isOwner = callerUserId === appointment.psychologist_id;
+      const tokenBody = {
+        properties: {
+          room_name: room.name,
+          exp,
+          is_owner: isOwner,
+          user_name: isOwner ? 'Psicólogo' : 'Paciente',
+          user_id: callerUserId,
+          enable_screenshare: isOwner,
+        },
+      };
+      const tokenResp = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${dailyApiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(tokenBody),
+      });
+      let token: string | null = null;
+      if (tokenResp.ok) {
+        const j = await tokenResp.json() as { token?: string };
+        token = j.token ?? null;
+      } else {
+        log.error('Daily meeting-token mint failed', { status: tokenResp.status });
+      }
+
+      // Persist URL into both columns — legacy callers still read
+      // google_meet_link. Tokens NÃO são persistidos (são por participante
+      // e curta duração; o token canônico é regerado a cada entrada).
       const { error: updateErr } = await supabaseAdmin
         .from('appointments')
         .update({
@@ -231,14 +266,15 @@ serve(async (req) => {
 
       if (updateErr) {
         log.error('Failed to persist meet_link', { error: updateErr });
-        // Don't roll back the Daily room — the caller can retry, the room
-        // is idempotent on the Daily side.
       }
 
-      log.info('Daily room ready', { appointmentId, url: room.url });
+      log.info('Daily room ready', { appointmentId, url: room.url, hasToken: !!token });
 
+      // url já vem com o token via fragment para o client; também devolvido
+      // separado para clientes que preferem montar manualmente.
+      const urlWithToken = token ? `${room.url}?t=${encodeURIComponent(token)}` : room.url;
       return new Response(
-        JSON.stringify({ url: room.url, name: room.name, reused: false }),
+        JSON.stringify({ url: urlWithToken, name: room.name, token, reused: false }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }

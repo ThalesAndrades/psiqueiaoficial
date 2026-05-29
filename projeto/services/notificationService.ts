@@ -4,7 +4,10 @@ import { Platform, Alert } from 'react-native';
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'appointment' | 'reminder' | 'message' | 'achievement' | 'payment';
+  // Schema é `text` livre; o Edge Function push-notifications grava
+  // 'general' como fallback. A union abaixo lista os canônicos mas aceita
+  // `string` para não mentir no contrato de leitura.
+  type: 'appointment' | 'reminder' | 'message' | 'achievement' | 'payment' | 'general' | (string & {});
   title: string;
   message: string;
   read: boolean;

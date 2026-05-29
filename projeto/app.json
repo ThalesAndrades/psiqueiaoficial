@@ -103,7 +103,16 @@
           "mode": "production"
         }
       ],
-      "@sentry/react-native/expo"
+      "@sentry/react-native/expo",
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "PsiquèIA usa dados de atividade física (passos, distância, batimentos cardíacos) para correlacionar com seu bem-estar emocional e oferecer insights personalizados. Você pode revogar acesso a qualquer momento em Ajustes.",
+          "healthUpdatePermission": "PsiquèIA não grava dados no HealthKit; esta entrada é exigida pelos frameworks nativos quando o app declara intenção de leitura de saúde.",
+          "isClinicalDataEnabled": false
+        }
+      ],
+      "react-native-health-connect"
     ],
     "experiments": {
       "typedRoutes": true

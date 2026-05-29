@@ -6,14 +6,14 @@ export interface Appointment {
   psychologist_id: string;
   scheduled_at: string;
   duration_minutes: number;
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  status: 'pending' | 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   session_notes?: string;
   patient_notes?: string;
   meeting_link?: string;
   meet_link?: string;
   google_calendar_event_id?: string;
   google_meet_link?: string;
-  payment_status: 'pending' | 'paid' | 'refunded';
+  payment_status: 'unpaid' | 'pending' | 'paid' | 'refunded';
   amount?: number;
   session_price?: number;
   created_at: string;
