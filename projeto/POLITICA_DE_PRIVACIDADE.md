@@ -1,6 +1,6 @@
 # Política de Privacidade – PsiquèIA
 
-**Última atualização:** 18 de Dezembro de 2025
+**Última atualização:** 29 de Maio de 2026
 
 ## Sumário
 
@@ -27,7 +27,9 @@
 
 ### 1. Introdução e Compromisso
 
-Bem-vindo(a) ao **PsiquèIA** ("Plataforma"), um aplicativo dedicado a conectar pacientes e psicólogos para telessaúde mental, potencializado por ferramentas de inteligência artificial. 
+Bem-vindo(a) ao **PsiquèIA** ("Plataforma"), um aplicativo dedicado a conectar pacientes e psicólogos para telessaúde mental, potencializado por ferramentas de inteligência artificial.
+
+**Controladora dos dados:** Psiqueia Inteligência Emocional e Digital Ltda., pessoa jurídica de direito privado, inscrita no CNPJ sob o nº 61.704.634/0001-10, com sede na Rua Antonio Serafin Gonçalves, 38, Bairro Km 60, Tubarão/SC, CEP 88702-890.
 
 Sua privacidade e a confidencialidade dos seus dados são a nossa maior prioridade. Esta Política de Privacidade detalha, de forma transparente, como coletamos, usamos, armazenamos, compartilhamos e protegemos suas informações pessoais, em total conformidade com a **Lei Geral de Proteção de Dados (LGPD), Lei nº 13.709/2018**, e as melhores práticas de segurança do mercado.
 
@@ -61,7 +63,8 @@ Coletamos apenas os dados estritamente necessários para a prestação de nossos
 Para viabilizar funcionalidades essenciais, recebemos dados de parceiros rigorosamente selecionados:
 
 -   **Stripe:** Confirmação de status de pagamento e informações da conta de recebimento dos psicólogos (Stripe Connect). **Nós nunca recebemos ou armazenamos os dados do seu cartão de crédito.**
--   **Google:** Identificadores de eventos do Google Calendar (para sincronia de agenda) e links de sessão do Google Meet.
+-   **Google (opcional):** Identificadores de eventos do Google Calendar para sincronia de agenda, quando o usuário autoriza a integração.
+-   **Daily.co:** Provedor das salas de videoconferência das sessões de telessaúde. As sessões são privadas (tokens por participante, limite de 2 participantes) e não são gravadas pela plataforma.
 
 ### 3. Como Usamos Seus Dados?
 
@@ -91,8 +94,10 @@ O compartilhamento de dados é realizado de forma restrita e segura, apenas quan
 | **Entre Paciente e Psicólogo** | Um psicólogo tem acesso aos dados de seu paciente vinculado (nome, histórico de sessões, entradas de diário compartilhadas). O paciente vê as informações profissionais do psicólogo. |
 | **Provedores de Serviço** | - **Supabase (EUA):** Armazenamento seguro do banco de dados e autenticação.
 | | - **Stripe (Global):** Processamento de pagamentos e gestão de contas de repasse (Connect).
-| | - **Google (Global):** Integração com Google Calendar e Google Meet.
-| | - **OpenAI/Google (Global):** Análise de texto para as funcionalidades de IA (os dados são enviados de forma anonimizada sempre que possível).
+| | - **Daily.co (Global):** Infraestrutura de videoconferência das sessões de telessaúde.
+| | - **Google (Global, opcional):** Integração com Google Calendar quando autorizada pelo usuário.
+| | - **Anthropic (EUA):** Análise de texto pelo modelo Claude para as funcionalidades de IA. A Anthropic não treina seus modelos com dados de API conforme política contratual padrão.
+| | - **Sentry e PostHog (Global):** Telemetria de erros e produto (eventos agregados, sem PII direta).
 | | - **Expo (Global):** Envio de notificações push. |
 | **Requisição Legal** | Em caso de ordem judicial ou obrigação legal, poderemos compartilhar o mínimo de dados necessários para cumprir a lei. |
 | **Fusão ou Aquisição** | Em caso de venda ou fusão da empresa, os dados serão transferidos para o novo controlador, que deverá seguir os mesmos compromissos desta política. Você será notificado previamente. |
@@ -144,6 +149,7 @@ Podemos atualizar esta política para refletir mudanças em nossas práticas ou 
 
 Para qualquer dúvida, solicitação ou reclamação relacionada à sua privacidade, entre em contato com nosso **Encarregado de Proteção de Dados (DPO)**:
 
--   **Nome do DPO:** [Nome do Encarregado de Dados]
+-   **Nome do DPO:** [a preencher — designação interna pendente]
 -   **E-mail:** **privacy@psiqueia.com**
--   **Endereço Comercial:** [Endereço da Empresa, Cidade, Estado, CEP]
+-   **Controladora:** Psiqueia Inteligência Emocional e Digital Ltda. (CNPJ 61.704.634/0001-10)
+-   **Endereço Comercial:** Rua Antonio Serafin Gonçalves, 38, Bairro Km 60, Tubarão/SC, CEP 88702-890
