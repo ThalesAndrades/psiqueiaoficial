@@ -1,6 +1,6 @@
 # Termos e Condições de Uso – PsiquèIA
 
-**Última atualização:** 18 de Dezembro de 2025
+**Última atualização:** 29 de Maio de 2026
 
 ## Sumário
 
@@ -26,7 +26,7 @@
 
 Bem-vindo(a) ao **PsiquèIA** ("Plataforma", "Serviço"). Estes Termos e Condições de Uso ("Termos") regem o seu acesso e uso do nosso aplicativo móvel e serviços relacionados. 
 
-Ao criar uma conta, acessar ou utilizar a Plataforma, você celebra um contrato vinculativo com a [Nome da Empresa Proprietária do PsiquèIA] ("Empresa", "nós") e concorda em cumprir integralmente com estes Termos e com nossa **Política de Privacidade**.
+Ao criar uma conta, acessar ou utilizar a Plataforma, você celebra um contrato vinculativo com a **Psiqueia Inteligência Emocional e Digital Ltda.**, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº **61.704.634/0001-10**, com sede na Rua Antonio Serafin Gonçalves, 38, Bairro Km 60, Tubarão/SC, CEP 88702-890 ("Empresa", "nós") e concorda em cumprir integralmente com estes Termos e com nossa **Política de Privacidade**.
 
 > **Se você não concorda com qualquer parte destes Termos, você não deve criar uma conta ou utilizar nossos serviços.**
 
@@ -95,7 +95,7 @@ As ferramentas de IA (análise de diário, chatbot) são recursos de apoio e nã
 
 ### 8. Propriedade Intelectual
 
--   **Nossa Propriedade:** A marca PsiquèIA, o software, o design, os textos e os gráficos da plataforma são de propriedade exclusiva da [Nome da Empresa].
+-   **Nossa Propriedade:** A marca PsiquèIA, o software, o design, os textos e os gráficos da plataforma são de propriedade exclusiva da Psiqueia Inteligência Emocional e Digital Ltda. (CNPJ 61.704.634/0001-10).
 -   **Seu Conteúdo:** Você retém a propriedade sobre o conteúdo que você gera (entradas de diário, notas, etc.). No entanto, você nos concede uma licença limitada, não exclusiva e isenta de royalties para usar, armazenar e processar esse conteúdo com o único propósito de operar e melhorar a plataforma.
 
 ### 9. Isenção de Garantias e Limitação de Responsabilidade
@@ -118,7 +118,7 @@ Reservamo-nos o direito de suspender ou encerrar sua conta, sem aviso prévio, c
 
 ### 12. Legislação Aplicável e Foro
 
-Estes Termos serão regidos e interpretados de acordo com as leis da República Federativa do Brasil. Fica eleito o foro da Comarca de [Cidade da Empresa], [Estado da Empresa], para dirimir quaisquer controvérsias decorrentes deste documento, com renúncia a qualquer outro, por mais privilegiado que seja.
+Estes Termos serão regidos e interpretados de acordo com as leis da República Federativa do Brasil. Fica eleito o foro da Comarca de Tubarão, Estado de Santa Catarina, para dirimir quaisquer controvérsias decorrentes deste documento, com renúncia a qualquer outro, por mais privilegiado que seja.
 
 ### 13. Disposições Gerais
 
