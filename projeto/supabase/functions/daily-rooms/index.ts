@@ -18,6 +18,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
 import { createLogger } from '../_shared/logger.ts';
+import { isTestMode, TEST_MODE_HEADER } from '../_shared/testMode.ts';
 
 const log = createLogger('daily-rooms');
 

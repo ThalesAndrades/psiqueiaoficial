@@ -8,6 +8,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { buildCorsHeaders } from '../_shared/cors.ts';
 import { createLogger } from '../_shared/logger.ts';
+import { isTestMode, TEST_MODE_HEADER } from '../_shared/testMode.ts';
 
 const log = createLogger('ai-agent');
 
@@ -83,6 +84,33 @@ serve(async (req) => {
     log.info('AI Agent request', { type, userId, stream });
 
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+
+    // Modo teste: sem ANTHROPIC_API_KEY, devolve uma resposta mockada por
+    // tipo em vez de 500, para o app rodar sem credencial. Ainda persiste a
+    // interação para o histórico funcionar. Ver _shared/testMode.ts.
+    if (isTestMode() && !apiKey) {
+      const mockResponse = buildMockResponse(type);
+      try {
+        await supabase.from('ai_interactions').insert({
+          user_id: userId,
+          interaction_type: type,
+          context,
+          user_message: message,
+          ai_response: mockResponse,
+        });
+      } catch (persistErr) {
+        log.error('Failed to persist mock ai_interactions row', { error: persistErr });
+      }
+      log.info('AI Agent test-mode mock response', { type });
+      return new Response(
+        JSON.stringify({ response: mockResponse, type }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', [TEST_MODE_HEADER]: 'true' },
+        }
+      );
+    }
+
     if (!apiKey) {
       log.error('ANTHROPIC_API_KEY missing');
       return new Response(
@@ -218,6 +246,28 @@ function extractText(aiData: unknown): string {
 // System prompt is stable per `type` so that prompt caching hits across calls
 // of the same mode. Do not interpolate user-specific data here — that goes in
 // the user prompt below.
+// Respostas canônicas de modo teste, uma por tipo. Texto curto, em PT,
+// coerente com as DIRETRIZES do system prompt. Só usado quando TEST_MODE
+// está ligado e não há ANTHROPIC_API_KEY.
+function buildMockResponse(type: RequestType): string {
+  switch (type) {
+    case 'chat':
+      return 'Entendo como você está se sentindo. 💙 Que tal respirar fundo por um minuto? Estou aqui para te apoiar — e lembre-se de conversar com seu psicólogo sobre o que for importante. (resposta de demonstração)';
+    case 'insight':
+      return 'Você deu passos importantes esta semana — reconheça isso. Continue registrando como se sente; pequenos hábitos constroem grandes mudanças. (demonstração)';
+    case 'analysis':
+      return 'Padrão observado: seus melhores momentos costumam vir após atividades de autocuidado. Vale priorizá-las nos dias mais difíceis. (demonstração)';
+    case 'recommendation':
+      return 'Hoje você pode: 1) caminhar 10 minutos ao ar livre; 2) anotar 3 coisas pelas quais é grato; 3) enviar uma mensagem a alguém de confiança. (demonstração)';
+    case 'mood_analysis':
+      return 'Seu humor tende a melhorar no fim do dia e oscila mais pela manhã. Observar esse ritmo ajuda a planejar tarefas exigentes. (demonstração)';
+    case 'treatment_suggestion':
+      return 'Sugestão de plano (demonstração): 1) psicoeducação sobre ansiedade; 2) registro diário de gatilhos; 3) técnica de respiração diafragmática; 4) revisão quinzenal de metas.';
+    default:
+      return 'Resposta de demonstração do PsiquèIA (modo teste). Configure ANTHROPIC_API_KEY para respostas reais.';
+  }
+}
+
 function buildSystemPrompt(type: RequestType): string {
   const basePrompt = `Você é PsiquèIA, assistente de bem-estar emocional.
 
