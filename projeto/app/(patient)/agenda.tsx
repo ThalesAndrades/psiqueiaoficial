@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { theme } from '../../constants/theme';
-import { useAppData } from '../../hooks/useAppData';
+import { useAppointments } from '../../hooks/queries/useAppointments';
 import { useAuth } from '../../hooks/useAuth';
 import { analyticsService } from '../../services';
 import { LoadingSpinner, FadeInView } from '../../components';
@@ -18,10 +18,17 @@ const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export default function AgendaScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { patientAppointments, refreshAppointments } = useAppData();
   const { userProfile } = useAuth();
+  // Primeira tela do app migrada para TanStack Query (substitui o caminho
+  // legado de useAppData().patientAppointments + refreshAppointments manual).
+  // O hook cuida de cache, refetch on focus via React Query, loading state
+  // e error retry. Padrão para as próximas migrações.
+  const {
+    data: appointments = [],
+    isLoading: loading,
+    refetch,
+  } = useAppointments(userProfile?.id, 'patient');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [loading, setLoading] = useState(false);
   const [currentWeek, setCurrentWeek] = useState<Date[]>([]);
 
   useEffect(() => {
@@ -30,13 +37,13 @@ export default function AgendaScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      loadAppointments();
-      
+      refetch();
+
       // Track screen view
       if (userProfile?.id) {
         analyticsService.trackScreen('Agenda', userProfile.id);
       }
-    }, [userProfile?.id])
+    }, [userProfile?.id, refetch])
   );
 
   const generateWeek = () => {
@@ -52,12 +59,6 @@ export default function AgendaScreen() {
       week.push(day);
     }
     setCurrentWeek(week);
-  };
-
-  const loadAppointments = async () => {
-    setLoading(true);
-    await refreshAppointments();
-    setLoading(false);
   };
 
   const formatDate = (date: Date) => {
@@ -83,7 +84,7 @@ export default function AgendaScreen() {
     );
   };
 
-  const filteredAppointments = patientAppointments.filter((apt) =>
+  const filteredAppointments = appointments.filter((apt) =>
     isSameDay(new Date(apt.scheduled_at), selectedDate)
   );
 
@@ -124,7 +125,6 @@ export default function AgendaScreen() {
       return;
     }
 
-    setLoading(true);
     const { data, error } = await googleService.syncCalendar({
       patientEmail: userProfile.email,
     });
@@ -135,12 +135,11 @@ export default function AgendaScreen() {
       // Blocking Alert — the synced count matters (0 = silent no-op the user
       // needs to know about), and the list is about to re-render underneath.
       Alert.alert('Sucesso', `${data?.synced || 0} eventos sincronizados com Google Calendar`);
-      await loadAppointments();
+      await refetch();
     }
-    setLoading(false);
   };
 
-  if (loading && patientAppointments.length === 0) {
+  if (loading && appointments.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <LoadingSpinner size={40} color={theme.colors.primary} />
