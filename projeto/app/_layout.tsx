@@ -136,6 +136,7 @@ function RootLayoutContent() {
       <Stack.Screen name="(onboarding-psychologist)" />
       <Stack.Screen name="(patient)" />
       <Stack.Screen name="(psychologist)" />
+      <Stack.Screen name="(admin)" />
     </Stack>
   );
 }
