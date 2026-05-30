@@ -159,8 +159,16 @@ function RootLayout() {
   return (
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
-      options={{ host: POSTHOG_HOST }}
-      autocapture
+      options={{
+        host: POSTHOG_HOST,
+        // App de saúde: autocapture desligado para evitar registrar
+        // cada toque/interação (potencial PII em telas de diário, perfil,
+        // pagamento). Eventos canônicos são emitidos via analyticsService
+        // com payload curado e auditado. Lifecycle de app fica ligado para
+        // mantermos métricas de session_start/session_end.
+        captureNativeAppLifecycleEvents: true,
+      }}
+      autocapture={false}
     >
       <ErrorBoundary>
         <AuthProvider>

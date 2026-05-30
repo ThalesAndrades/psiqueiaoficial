@@ -1,17 +1,29 @@
 import { supabase } from '../lib/supabase';
 import { Platform, Alert } from 'react-native';
 
+// Lista canônica de tipos de notificação. O Edge Function push-notifications
+// e qualquer serviço que crie notification deve usar uma dessas constantes.
+// O schema da tabela é `text` livre por flexibilidade, mas escrita pelo
+// app é restrita à union derivada deste array.
+export const NOTIFICATION_TYPES = [
+  'appointment',
+  'reminder',
+  'message',
+  'achievement',
+  'payment',
+  'general',
+] as const;
+
+export type NotificationType = typeof NOTIFICATION_TYPES[number];
+
 export interface Notification {
   id: string;
   user_id: string;
-  // Schema é `text` livre; o Edge Function push-notifications grava
-  // 'general' como fallback. A union abaixo lista os canônicos mas aceita
-  // `string` para não mentir no contrato de leitura.
-  type: 'appointment' | 'reminder' | 'message' | 'achievement' | 'payment' | 'general' | (string & {});
+  type: NotificationType;
   title: string;
   message: string;
   read: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
   created_at: string;
 }
 

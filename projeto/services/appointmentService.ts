@@ -9,16 +9,33 @@ export interface Appointment {
   status: 'pending' | 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   session_notes?: string;
   patient_notes?: string;
-  meeting_link?: string;
+  // meet_link é a coluna canônica (preenchida por daily-rooms desde a
+  // migração Daily.co). meeting_link e google_meet_link são legados de
+  // Google Meet — mantidos como leitura para compat, mas não escreva
+  // mais neles. Será removido após migração completa de dados.
   meet_link?: string;
-  google_calendar_event_id?: string;
+  meeting_link?: string;
   google_meet_link?: string;
+  google_calendar_event_id?: string;
   payment_status: 'unpaid' | 'pending' | 'paid' | 'refunded';
   amount?: number;
   session_price?: number;
   created_at: string;
   updated_at: string;
 }
+
+// Forma mínima dos perfis embedados via PostgREST FK joins. Mantém
+// apenas colunas seguras para diretório (sem PII sensível).
+export type PartyProfile = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+export type AppointmentWithParties = Appointment & {
+  patient?: PartyProfile;
+  psychologist?: PartyProfile;
+};
 
 export const appointmentService = {
   async getAppointments(userId: string, userType: 'patient' | 'psychologist') {
@@ -53,7 +70,7 @@ export const appointmentService = {
         .limit(50);
 
       if (error) throw new Error(error.message);
-      return { data: data as any[] || [], error: null };
+      return { data: (data as unknown as AppointmentWithParties[] | null) ?? [], error: null };
     } catch (err: any) {
       console.error('[AppointmentService] getAppointments failed:', { userId, userType, error: err.message });
       return { data: [], error: err.message || 'Erro ao carregar agendamentos' };
@@ -170,7 +187,7 @@ export const appointmentService = {
         .order('scheduled_at', { ascending: true });
 
       if (error) throw new Error(error.message);
-      return { data: data as any[] || [], error: null };
+      return { data: (data as unknown as AppointmentWithParties[] | null) ?? [], error: null };
     } catch (err: any) {
       console.error('[AppointmentService] getUpcomingAppointments failed:', { userId, userType, error: err.message });
       return { data: [], error: err.message || 'Erro ao carregar próximos agendamentos' };

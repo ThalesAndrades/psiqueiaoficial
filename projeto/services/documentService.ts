@@ -38,7 +38,7 @@ export const documentService = {
         .order('shared_at', { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { data: (data as any[]) || [], error: null };
+      return { data: (data as SharedDocument[] | null) ?? [], error: null };
     } catch (err: any) {
       console.error('[DocumentService] getSharedDocuments failed:', err.message);
       return { data: [], error: err.message || 'Erro ao carregar documentos compartilhados' };
@@ -60,7 +60,7 @@ export const documentService = {
         .order('shared_at', { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { data: (data as any[]) || [], error: null };
+      return { data: (data as SharedDocument[] | null) ?? [], error: null };
     } catch (err: any) {
       console.error('[DocumentService] getDocumentsByPsychologist failed:', err.message);
       return { data: [], error: err.message || 'Erro ao carregar documentos' };
@@ -82,7 +82,7 @@ export const documentService = {
         .order('shared_at', { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { data: (data as any[]) || [], error: null };
+      return { data: (data as SharedDocument[] | null) ?? [], error: null };
     } catch (err: any) {
       console.error('[DocumentService] getDocumentsForPatient failed:', err.message);
       return { data: [], error: err.message || 'Erro ao carregar documentos' };

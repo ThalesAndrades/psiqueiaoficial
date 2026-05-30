@@ -50,34 +50,6 @@ export const invitationService = {
   },
 
   /**
-   * Mark an invitation as used
-   */
-  async markInvitationUsed(code: string, userId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data, error } = await supabase.rpc('mark_invitation_used', {
-        p_code: code,
-        p_user_id: userId,
-      });
-
-      if (error) {
-        console.error('Error marking invitation as used:', error);
-        return {
-          success: false,
-          error: 'Erro ao marcar convite como usado',
-        };
-      }
-
-      return { success: data };
-    } catch (error: any) {
-      console.error('Error marking invitation as used:', error);
-      return {
-        success: false,
-        error: 'Erro ao marcar convite como usado',
-      };
-    }
-  },
-
-  /**
    * Get all invitations (admin only)
    */
   async getAllInvitations(): Promise<{ data: Invitation[] | null; error: string | null }> {
