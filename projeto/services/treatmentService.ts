@@ -33,7 +33,7 @@ export const treatmentService = {
         .order('created_at', { ascending: false });
 
       if (error) throw new Error(error.message);
-      return { data: data as any[] || [], error: null };
+      return { data: (data as TreatmentPlan[] | null) ?? [], error: null };
     } catch (err: any) {
       console.error('[TreatmentService] getTreatmentPlans failed:', { userId, userType, error: err.message });
       return { data: [], error: err.message || 'Erro ao carregar planos de tratamento' };

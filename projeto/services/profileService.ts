@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { Platform } from 'react-native';
+import { UserProfileSchema } from '../lib/schemas/user';
+import { logger } from './loggerService';
 
 export interface UserProfile {
   id: string;
@@ -58,14 +60,19 @@ export const profileService = {
         return { data: null, error: 'Perfil não encontrado' };
       }
 
-      // CRITICAL: Validate user_type
-      if (data.user_type !== 'patient' && data.user_type !== 'psychologist') {
-        console.error('[ProfileService] INVALID user_type:', data.user_type, 'for userId:', userId);
-        return { data: null, error: 'Tipo de usuário inválido' };
+      // Zod boundary parse: garante que o dado vindo do banco bate com o
+      // contrato TS. Em vez de cast `as UserProfile` (que mente em runtime),
+      // safeParse erra alto se schema mudar e algum campo crítico vier
+      // ausente/torto.
+      const parsed = UserProfileSchema.safeParse(data);
+      if (!parsed.success) {
+        logger.error('ProfileService', 'getUserProfile schema mismatch', {
+          userId,
+          issues: parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).slice(0, 5),
+        });
+        return { data: null, error: 'Perfil em formato inválido' };
       }
-
-      console.log('[ProfileService] getUserProfile SUCCESS:', { userId, user_type: data.user_type, email: data.email, onboarding: data.onboarding_completed });
-      return { data: data as UserProfile, error: null };
+      return { data: parsed.data as UserProfile, error: null };
     } catch (err: any) {
       console.error('[ProfileService] getUserProfile EXCEPTION:', { userId, error: err.message, stack: err.stack });
       return { data: null, error: err.message || 'Erro ao carregar perfil' };
