@@ -19,7 +19,7 @@
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#6B46C1"
+      "backgroundColor": "#FFFFFF"
     },
     "notification": {
       "icon": "./assets/images/logo.png",
@@ -56,7 +56,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#6B46C1"
+        "backgroundColor": "#FFFFFF"
       },
       "permissions": [
         "CAMERA",
@@ -95,7 +95,7 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#6B46C1"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       "expo-secure-store",
