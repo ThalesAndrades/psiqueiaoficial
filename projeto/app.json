@@ -10,7 +10,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "primaryColor": "#6B46C1",
-    "assetBundlePatterns": ["assets/**/*"],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -40,7 +42,9 @@
         "NSHealthUpdateUsageDescription": "PsiquèIA não grava dados no HealthKit; esta entrada é exigida pelos frameworks nativos quando o app declara intenção de leitura de saúde.",
         "NSFaceIDUsageDescription": "Use Face ID para acessar suas anotações e sessões com mais segurança.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       },
       "associatedDomains": [
         "applinks:psiqueia.com"
@@ -119,8 +123,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": "00000000-0000-0000-0000-000000000000"
-      }
-    }
+        "projectId": "f91d327e-5743-4045-a72c-e07a5b178a7a"
+      },
+      "router": {}
+    },
+    "owner": "thales-andrades"
   }
 }

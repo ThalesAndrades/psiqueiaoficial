@@ -33,14 +33,7 @@
       "channel": "production",
       "resourceClass": "medium",
       "android": {
-        "buildType": "app-bundle",
-        "gradle": {
-          "buildOptions": {
-            "enableProguardInReleaseBuilds": true,
-            "enableHermes": true
-          }
-        },
-        "uploadProguardMapping": true
+        "buildType": "app-bundle"
       },
       "ios": {
         "buildConfiguration": "Release"
