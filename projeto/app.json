@@ -2,7 +2,7 @@
   "expo": {
     "name": "PsiquèIA",
     "slug": "psiqueia",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "PsiquèIA — terapia online e ferramentas de bem-estar emocional. Encontre seu psicólogo, agende sessões, mantenha seu diário e acompanhe seu plano de tratamento com apoio de IA.",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
