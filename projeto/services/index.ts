@@ -19,3 +19,4 @@ export * from './documentService';
 export * from './auditService';
 export * from './activityService';
 export * from './videoService';
+export * from './moderationService';
