@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "description": "PsiquèIA — terapia online e ferramentas de bem-estar emocional. Encontre seu psicólogo, agende sessões, mantenha seu diário e acompanhe seu plano de tratamento com apoio de IA.",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "psiqueia",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
