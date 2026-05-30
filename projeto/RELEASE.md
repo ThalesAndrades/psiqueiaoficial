@@ -110,7 +110,7 @@ This must be done in the web consoles, ONCE per app.
 
 1. Sign in to https://appstoreconnect.apple.com → My Apps → **+** →
    "New App".
-2. Platform: iOS. Bundle ID: `com.psiqueia.app`. SKU: `psiqueia-ios`.
+2. Platform: iOS. Bundle ID: `app.meupsiqueia`. SKU: `psiqueia-ios`.
 3. After save: copy the App ID (numeric) → that's `ASC_APP_ID`.
 4. Fill the metadata: name, subtitle, category, support URL, marketing
    URL, privacy policy URL (use the one in `POLITICA_DE_PRIVACIDADE.md`
@@ -156,7 +156,7 @@ Bump versions for THIS release:
 > builds.
 
 Sanity-check the bundle identifiers match what was registered in the
-stores (`com.psiqueia.app` in both).
+stores (`app.meupsiqueia` in both).
 
 ## 3. Build production binaries
 
